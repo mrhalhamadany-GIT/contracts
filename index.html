@@ -822,7 +822,7 @@ function DashboardPage({contracts,totalPortfolio,totalNet,auditLog,setAuditLog,r
   );
 }
 
-function DetailPage({active,rev,exp,sal,mat,oth,totalCost,net,margin,ro,filteredItems,search,setSearch,filter,setFilter,onBack,openModal,delItem,exportB,importB,aiText,aiLoad,genAI}){
+function DetailPage({active,rev,exp,sal,mat,oth,totalCost,net,margin,ro,filteredItems,search,setSearch,filter,setFilter,onBack,openModal,delItem,aiText,aiLoad,genAI}){
   if(!active)return null;
   return <div style={{animation:"fadeUp 0.4s cubic-bezier(0.16,1,0.3,1)"}}>
 
@@ -965,16 +965,6 @@ function DetailPage({active,rev,exp,sal,mat,oth,totalCost,net,margin,ro,filtered
     </div>
 
     {/* Backup */}
-    <div className="sect" style={{marginBottom:12}}>
-      <h3 style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:15,fontWeight:600,color:"var(--t2)",marginBottom:5}}>Backup & Restore</h3>
-      <p style={{fontSize:12,color:"var(--t4)",marginBottom:14,lineHeight:1.65}}>Export all contracts as JSON or restore from a previous backup.</p>
-      <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
-        <button className="btn-sm" onClick={exportB}>↓ Export Backup</button>
-        {!ro&&<label className="btn-sm" style={{cursor:"pointer",display:"inline-flex",alignItems:"center"}}>
-          ↑ Import Backup<input type="file" accept=".json" style={{display:"none"}} onChange={importB}/>
-        </label>}
-      </div>
-    </div>
 
     {/* Delete contract */}
     {!ro&&<div style={{paddingBottom:48}}>
@@ -1302,7 +1292,6 @@ function AppMain({user,onLogout}){
         filter={filter} setFilter={setFilter}
         onBack={()=>{setPage("home");setActiveId(null);}}
         openModal={openModal} delItem={delItem}
-        exportB={exportB} importB={importB}
         aiText={aiText} aiLoad={aiLoad} genAI={genAI}/>}
       {page==="dashboard"&&<DashboardPage contracts={contracts} totalPortfolio={totalPortfolio} totalNet={totalNet} auditLog={auditLog} setAuditLog={setAuditLog} ro={ro} exportB={exportB} importB={importB}/>}
     </div>
