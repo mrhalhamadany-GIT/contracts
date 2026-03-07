@@ -69,16 +69,25 @@ async function cloudWrite(contracts) {
     "Prefer": "resolution=merge-duplicates"
   };
 
-  // Use upsert with fixed id=1
-  const res = await fetch(SB_URL + "/rest/v1/contracts", {
+  // Try PATCH first (update existing row)
+  const patchRes = await fetch(SB_URL + "/rest/v1/contracts?id=eq.1", {
+    method: "PATCH",
+    headers: h,
+    body: JSON.stringify({ data: contracts })
+  });
+
+  if (patchRes.ok || patchRes.status === 204) return true;
+
+  // If PATCH failed, try POST (insert)
+  const postRes = await fetch(SB_URL + "/rest/v1/contracts", {
     method: "POST",
-    headers: { ...h, "Prefer": "resolution=merge-duplicates" },
+    headers: h,
     body: JSON.stringify({ id: 1, data: contracts })
   });
 
-  if (!res.ok) {
-    const txt = await res.text();
-    throw new Error("Write failed: " + res.status + " " + txt);
+  if (!postRes.ok) {
+    const txt = await postRes.text();
+    throw new Error("Write failed: " + postRes.status + " " + txt);
   }
   return true;
 }
