@@ -39,12 +39,16 @@
 const { useState, useEffect } = React;
 
 // ─────────────────────────────────────────────────────────────────────────────
-// CLOUD CONFIG — hardcoded bin, same on every device
+// CLOUD CONFIG — hardcoded blob, same on every device
 // ─────────────────────────────────────────────────────────────────────────────
-const BASE_URL = "https://jsonblob.com/019cc63b-c413-71c6-87f2-88f33719763a";
+const BLOB_ID  = "019cc63b-c413-71c6-87f2-88f33719763a";
+const BASE_URL = `https://jsonblob.com/api/jsonBlob/${BLOB_ID}`;
 
 async function cloudRead() {
-  const res = await fetch(BASE_URL);
+  const res = await fetch(BASE_URL, {
+    method: "GET",
+    headers: { "Content-Type": "application/json", "Accept": "application/json" }
+  });
   if (!res.ok) throw new Error(`Read failed: ${res.status}`);
   const json = await res.json();
   if (Array.isArray(json.contracts)) return json.contracts;
@@ -55,7 +59,7 @@ async function cloudRead() {
 async function cloudWrite(contracts) {
   const res = await fetch(BASE_URL, {
     method: "PUT",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", "Accept": "application/json" },
     body: JSON.stringify({ contracts })
   });
   if (!res.ok) throw new Error(`Write failed: ${res.status}`);
