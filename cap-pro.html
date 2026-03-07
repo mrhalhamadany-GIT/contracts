@@ -770,21 +770,19 @@ function DashboardPage({contracts,totalPortfolio,totalNet,auditLog}){
               const dateStr=ts.toLocaleDateString("en-AE",{day:"numeric",month:"short",year:"numeric"});
               const timeStr=ts.toLocaleTimeString("en-AE",{hour:"2-digit",minute:"2-digit",hour12:true});
               return(
-                <div key={entry.id} style={{display:"flex",alignItems:"flex-start",gap:12,padding:"12px 0",borderBottom:i<auditEntries.length-1?"1px solid rgba(255,255,255,0.04)":"none"}}>
+                <div key={entry.id} style={{display:"flex",alignItems:"center",gap:12,padding:"10px 0",borderBottom:i<auditEntries.length-1?"1px solid rgba(255,255,255,0.04)":"none",flexWrap:"nowrap",minWidth:0}}>
                   {/* Action badge */}
-                  <div style={{background:actionBg,border:`1px solid ${actionColor}33`,borderRadius:8,padding:"4px 9px",fontSize:9.5,fontWeight:700,color:actionColor,whiteSpace:"nowrap",flexShrink:0,letterSpacing:"0.03em",marginTop:2}}>{entry.action}</div>
-                  <div style={{flex:1,minWidth:0}}>
-                    <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:4,flexWrap:"wrap"}}>
-                      <span style={{fontSize:12,fontWeight:700,color:"var(--t1)",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{entry.contractName}</span>
-                      <span style={{fontSize:9,fontWeight:700,color:"var(--a3)",background:"rgba(251,191,36,0.1)",border:"1px solid rgba(251,191,36,0.22)",borderRadius:6,padding:"2px 7px",letterSpacing:"0.05em",flexShrink:0}}>{entry.user}</span>
-                    </div>
-                    {entry.detail&&<div style={{fontSize:11,color:"var(--t3)",marginBottom:4}}>{entry.detail}</div>}
-                    <div style={{fontSize:9.5,color:"var(--t5)",display:"flex",alignItems:"center",gap:6}}>
-                      <span>{dateStr}</span>
-                      <span style={{opacity:0.4}}>·</span>
-                      <span>{timeStr}</span>
-                    </div>
-                  </div>
+                  <div style={{background:actionBg,border:`1px solid ${actionColor}33`,borderRadius:8,padding:"3px 9px",fontSize:9,fontWeight:700,color:actionColor,whiteSpace:"nowrap",flexShrink:0,letterSpacing:"0.03em"}}>{entry.action}</div>
+                  {/* Contract name */}
+                  <span style={{fontSize:12,fontWeight:700,color:"var(--t1)",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis",flexShrink:1,minWidth:0,maxWidth:180}}>{entry.contractName}</span>
+                  {/* User badge */}
+                  <span style={{fontSize:9,fontWeight:700,color:"var(--a3)",background:"rgba(251,191,36,0.1)",border:"1px solid rgba(251,191,36,0.22)",borderRadius:6,padding:"2px 7px",letterSpacing:"0.05em",whiteSpace:"nowrap",flexShrink:0}}>{entry.user}</span>
+                  {/* Separator */}
+                  <span style={{color:"var(--t5)",flexShrink:0,opacity:0.4}}>·</span>
+                  {/* Detail */}
+                  {entry.detail&&<span style={{fontSize:11,color:"var(--t3)",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis",flex:1,minWidth:0}}>{entry.detail}</span>}
+                  {/* Timestamp — pushed to right */}
+                  <span style={{fontSize:9.5,color:"var(--t5)",whiteSpace:"nowrap",flexShrink:0,marginLeft:"auto"}}>{dateStr} · {timeStr}</span>
                 </div>
               );
             })}
