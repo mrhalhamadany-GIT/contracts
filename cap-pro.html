@@ -592,7 +592,7 @@ function HomePage({contracts,totalPortfolio,totalNet,ro,openC,openModal}){
 }
 
 // ── DASHBOARD PAGE ────────────────────────────────────────────────────────────
-function DashboardPage({contracts,totalPortfolio,totalNet,auditLog,setAuditLog,ro,exportB,importB}){
+function DashboardPage({contracts,totalPortfolio,totalNet,auditLog,setAuditLog,ro,exportB,importB,importOne}){
   function clearAudit(period){
     let filtered=[];
     if(period!=="all"){
@@ -653,10 +653,13 @@ function DashboardPage({contracts,totalPortfolio,totalNet,auditLog,setAuditLog,r
             <div style={{fontSize:11,fontWeight:700,color:"var(--t3)",textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:3}}>Admin Tools</div>
             <div style={{fontSize:10,color:"var(--t4)"}}>Backup and restore all contract data</div>
           </div>
-          <div style={{display:"flex",gap:8}}>
-            <button className="btn-sm" onClick={exportB} style={{display:"flex",alignItems:"center",gap:6}}>↓ Export Backup</button>
+          <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+            <button className="btn-sm" onClick={exportB} style={{display:"flex",alignItems:"center",gap:6}}>↓ Export All</button>
             <label className="btn-sm" style={{cursor:"pointer",display:"inline-flex",alignItems:"center",gap:6}}>
-              ↑ Import Backup<input type="file" accept=".json" style={{display:"none"}} onChange={importB}/>
+              ↑ Import All<input type="file" accept=".json" style={{display:"none"}} onChange={importB}/>
+            </label>
+            <label className="btn-sm" style={{cursor:"pointer",display:"inline-flex",alignItems:"center",gap:6}}>
+              ↑ Import Contract<input type="file" accept=".json" style={{display:"none"}} onChange={importOne}/>
             </label>
           </div>
         </div>
@@ -822,17 +825,20 @@ function DashboardPage({contracts,totalPortfolio,totalNet,auditLog,setAuditLog,r
   );
 }
 
-function DetailPage({active,rev,exp,sal,mat,oth,totalCost,net,margin,ro,filteredItems,search,setSearch,filter,setFilter,onBack,openModal,delItem,aiText,aiLoad,genAI}){
+function DetailPage({active,rev,exp,sal,mat,oth,totalCost,net,margin,ro,filteredItems,search,setSearch,filter,setFilter,onBack,openModal,delItem,exportOne,aiText,aiLoad,genAI}){
   if(!active)return null;
   return <div style={{animation:"fadeUp 0.4s cubic-bezier(0.16,1,0.3,1)"}}>
 
     {/* Breadcrumb */}
-    <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:22,fontSize:12}}>
-      <button style={{background:"none",border:"none",cursor:"pointer",color:"var(--t3)",fontWeight:500,transition:"color 0.15s",padding:0,fontSize:12}}
-        onMouseEnter={e=>e.currentTarget.style.color="var(--a3)"} onMouseLeave={e=>e.currentTarget.style.color="var(--t3)"}
-        onClick={onBack}>← Contracts</button>
-      <span style={{color:"var(--t5)",fontSize:10}}>›</span>
-      <span style={{color:"var(--t2)",fontWeight:600}}>{active.name}</span>
+    <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:22,fontSize:12,justifyContent:"space-between"}}>
+      <div style={{display:"flex",alignItems:"center",gap:8}}>
+        <button style={{background:"none",border:"none",cursor:"pointer",color:"var(--t3)",fontWeight:500,transition:"color 0.15s",padding:0,fontSize:12}}
+          onMouseEnter={e=>e.currentTarget.style.color="var(--a3)"} onMouseLeave={e=>e.currentTarget.style.color="var(--t3)"}
+          onClick={onBack}>← Contracts</button>
+        <span style={{color:"var(--t5)",fontSize:10}}>›</span>
+        <span style={{color:"var(--t2)",fontWeight:600}}>{active.name}</span>
+      </div>
+      <button className="btn-sm" onClick={()=>exportOne(active)} style={{fontSize:11,padding:"5px 12px"}}>↓ Export Contract</button>
     </div>
 
     {/* Header */}
@@ -1163,6 +1169,30 @@ function AppMain({user,onLogout}){
     const a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="cap-backup-"+today()+".json";a.click();
     showToast("Backup exported");
   }
+  function exportOne(c){
+    const b=new Blob([JSON.stringify(c,null,2)],{type:"application/json"});
+    const a=document.createElement("a");a.href=URL.createObjectURL(b);
+    a.download="contract-"+c.name.replace(/\s+/g,"-")+"-"+today()+".json";a.click();
+    showToast("Contract exported");
+  }
+  function importOne(e){
+    const f=e.target.files[0];if(!f)return;
+    const r=new FileReader();
+    r.onload=ev=>{
+      try{
+        const parsed=JSON.parse(ev.target.result);
+        if(!parsed.name||!Array.isArray(parsed.items)){showToast("Invalid contract file","error");return;}
+        const exists=contracts.find(c=>c.id===parsed.id);
+        if(exists){
+          if(confirm(`Contract "${exists.name}" already exists. Overwrite it?`))
+            save(contracts.map(c=>c.id===parsed.id?parsed:c),"Contract imported");
+        } else {
+          save([...contracts,{...parsed,id:parsed.id||uid()}],"Contract imported");
+        }
+      }catch{showToast("Failed to read file","error");}
+    };
+    r.readAsText(f);e.target.value="";
+  }
   function importB(e){
     const f=e.target.files[0];if(!f)return;
     const r=new FileReader();
@@ -1292,8 +1322,8 @@ function AppMain({user,onLogout}){
         filter={filter} setFilter={setFilter}
         onBack={()=>{setPage("home");setActiveId(null);}}
         openModal={openModal} delItem={delItem}
-        aiText={aiText} aiLoad={aiLoad} genAI={genAI}/>}
-      {page==="dashboard"&&<DashboardPage contracts={contracts} totalPortfolio={totalPortfolio} totalNet={totalNet} auditLog={auditLog} setAuditLog={setAuditLog} ro={ro} exportB={exportB} importB={importB}/>}
+        exportOne={exportOne} aiText={aiText} aiLoad={aiLoad} genAI={genAI}/>}
+      {page==="dashboard"&&<DashboardPage contracts={contracts} totalPortfolio={totalPortfolio} totalNet={totalNet} auditLog={auditLog} setAuditLog={setAuditLog} ro={ro} exportB={exportB} importB={importB} importOne={importOne}/>}
     </div>
   </div>;
 }
