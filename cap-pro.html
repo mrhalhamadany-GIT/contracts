@@ -887,7 +887,14 @@ function DetailPage({active,rev,exp,sal,mat,oth,totalCost,net,margin,ro,filtered
         <span style={{color:"var(--t2)",fontWeight:600}}>{active.name}</span>
       </div>
       <div style={{display:"flex",gap:8}}>
-        {active.contractFile&&<button className="btn-sm" onClick={()=>window.open(active.contractFile.data,"_blank")} style={{fontSize:11,padding:"5px 12px",color:"var(--a3)",borderColor:"rgba(251,191,36,0.25)"}}>📄 View Document</button>}
+        {active.contractFile&&<button className="btn-sm" onClick={async()=>{
+          try{
+            const res=await fetch(active.contractFile.url,{headers:{"Authorization":"Bearer "+SB_SERVICE}});
+            if(!res.ok)throw new Error("HTTP "+res.status);
+            const blob=await res.blob();
+            window.open(URL.createObjectURL(blob),"_blank");
+          }catch(e){alert("Could not load document: "+e.message);}
+        }} style={{fontSize:11,padding:"5px 12px",color:"var(--a3)",borderColor:"rgba(251,191,36,0.25)"}}>📄 View Document</button>}
         <button className="btn-sm" onClick={()=>exportOnePDF(active)} style={{fontSize:11,padding:"5px 12px"}}>↑ Export PDF</button>
       </div>
     </div>
