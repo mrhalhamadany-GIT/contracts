@@ -19,7 +19,7 @@
       --neg:#f87171; --neg2:#ef4444;
       --gold:#fbbf24; --gold2:#f59e0b;
       --blue:#60a5fa; --purple:#c084fc; --cyan:#22d3ee; --yellow:#facc15;
-      --t1:#eef0ff; --t2:#9da8d0; --t3:#616b96; --t4:#363d60; --t5:#1c2140;
+      --t1:#f5ede0; --t2:#c4ae96; --t3:#8a7260; --t4:#4a3828; --t5:#2a1e10;
       --radius:20px; --radius-sm:12px;
       --nav-h:62px;
     }
@@ -145,7 +145,7 @@
       background:rgba(20,13,5,0.97);border:1px solid rgba(251,191,36,0.28);border-radius:14px;
       padding:12px 22px;font-size:13px;color:var(--a4);font-weight:600;z-index:9999;
       transition:transform 0.38s cubic-bezier(0.34,1.56,0.64,1);white-space:nowrap;
-      box-shadow:0 16px 48px rgba(0,0,0,0.6),0 0 0 1px rgba(99,102,241,0.07);
+      box-shadow:0 16px 48px rgba(0,0,0,0.6),0 0 0 1px rgba(251,191,36,0.07);
       backdrop-filter:blur(20px);display:flex;align-items:center;gap:8px}
     .toast.show{transform:translateX(-50%) translateY(0)}
 
@@ -160,17 +160,17 @@
       justify-content:center;animation:fadeIn 0.18s ease;padding:20px}
     .modal-card{animation:scaleIn 0.26s cubic-bezier(0.34,1.56,0.64,1);background:#110d07;
       border:1px solid rgba(255,255,255,0.09);border-radius:24px;padding:32px;width:100%;
-      overflow-y:auto;box-shadow:0 48px 120px rgba(0,0,0,0.75),0 0 0 1px rgba(99,102,241,0.07);position:relative}
+      overflow-y:auto;box-shadow:0 48px 120px rgba(0,0,0,0.75),0 0 0 1px rgba(251,191,36,0.07);position:relative}
     .modal-top{position:absolute;top:0;left:0;right:0;height:1px;
       background:linear-gradient(90deg,transparent,rgba(251,191,36,0.55),transparent);border-radius:24px 24px 0 0}
 
     /* ── HERO BANNER ── */
     .hero-banner{background:linear-gradient(135deg,rgba(120,80,0,0.22) 0%,rgba(80,50,0,0.1) 50%,rgba(251,191,36,0.1) 100%);
-      border:1px solid rgba(99,102,241,0.13);border-radius:24px;padding:28px 32px;position:relative;overflow:hidden}
+      border:1px solid rgba(251,191,36,0.15);border-radius:24px;padding:28px 32px;position:relative;overflow:hidden}
     .hero-banner::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;
-      background:linear-gradient(90deg,transparent,rgba(99,102,241,0.55),transparent)}
+      background:linear-gradient(90deg,transparent,rgba(251,191,36,0.55),transparent)}
     .hero-banner::after{content:'';position:absolute;bottom:-20px;right:-20px;width:280px;height:280px;
-      background:radial-gradient(circle,rgba(99,102,241,0.07) 0%,transparent 65%);pointer-events:none}
+      background:radial-gradient(circle,rgba(251,191,36,0.07) 0%,transparent 65%);pointer-events:none}
 
     /* ── SECTION CARD ── */
     .sect{background:rgba(14,10,5,0.96);border:1px solid var(--border);border-radius:20px;padding:22px 26px;position:relative;overflow:hidden}
@@ -183,8 +183,8 @@
     .search-inp{padding-left:36px!important}
 
     /* ── AI BUBBLE ── */
-    .ai-bubble{background:linear-gradient(135deg,rgba(99,102,241,0.05),rgba(20,15,60,0.03));
-      border:1px solid rgba(99,102,241,0.13);border-radius:16px;padding:20px 22px;
+    .ai-bubble{background:linear-gradient(135deg,rgba(245,158,11,0.05),rgba(60,40,0,0.03));
+      border:1px solid rgba(251,191,36,0.15);border-radius:16px;padding:20px 22px;
       font-size:13px;line-height:1.95;color:#c0c8f0;white-space:pre-wrap;animation:fadeIn 0.4s ease}
 
     /* ── BREAKDOWN BARS ── */
@@ -194,7 +194,7 @@
 
     /* ── EMPTY STATE ── */
     .empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:52px 20px;text-align:center}
-    .empty-icon{width:60px;height:60px;border-radius:18px;background:rgba(99,102,241,0.06);border:1px solid rgba(99,102,241,0.1);display:flex;align-items:center;justify-content:center;font-size:24px;margin:0 auto 16px;color:var(--t4)}
+    .empty-icon{width:60px;height:60px;border-radius:18px;background:rgba(251,191,36,0.06);border:1px solid rgba(251,191,36,0.12);display:flex;align-items:center;justify-content:center;font-size:24px;margin:0 auto 16px;color:var(--t3)}
 
     /* ── PILL TABS ── */
     .pill-tab{padding:7px 14px;border-radius:20px;font-size:11.5px;font-weight:600;border:none;background:transparent;color:var(--t4);cursor:pointer;transition:all 0.18s;letter-spacing:0.01em;white-space:nowrap}
@@ -511,7 +511,7 @@ function HomePage({contracts,totalPortfolio,totalNet,ro,openC,openModal,exportB,
 
     {/* Hero */}
     <div className="hero-banner" style={{marginBottom:20}}>
-      <div style={{position:"absolute",top:-50,right:-50,width:220,height:220,background:"radial-gradient(circle,rgba(99,102,241,0.07),transparent 70%)",pointerEvents:"none"}}/>
+      <div style={{position:"absolute",top:-50,right:-50,width:220,height:220,background:"radial-gradient(circle,rgba(251,191,36,0.07),transparent 70%)",pointerEvents:"none"}}/>
       <div style={{fontSize:9,color:"var(--t4)",textTransform:"uppercase",letterSpacing:"0.15em",marginBottom:12,fontWeight:700}}>Portfolio Overview</div>
       <h1 style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:30,fontWeight:700,color:"var(--t1)",marginBottom:20,letterSpacing:"-0.025em",lineHeight:1.1}}>
         Your <span style={{background:"linear-gradient(135deg,var(--a3),var(--a4))",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent"}}>Contracts</span>
@@ -519,7 +519,7 @@ function HomePage({contracts,totalPortfolio,totalNet,ro,openC,openModal,exportB,
       <div style={{display:"flex",gap:36,flexWrap:"wrap",alignItems:"flex-start"}}>
         <div>
           <div style={{fontSize:9,color:"var(--t4)",textTransform:"uppercase",letterSpacing:"0.12em",marginBottom:5,fontWeight:700}}>Total Value</div>
-          <div style={{fontSize:24,fontWeight:700,letterSpacing:"-0.02em"}}><AnimNum value={totalPortfolio} color="#a5b4fc"/></div>
+          <div style={{fontSize:24,fontWeight:700,letterSpacing:"-0.02em"}}><AnimNum value={totalPortfolio} color="#fbbf24"/></div>
         </div>
         <div>
           <div style={{fontSize:9,color:"var(--t4)",textTransform:"uppercase",letterSpacing:"0.12em",marginBottom:5,fontWeight:700}}>Net Balance</div>
@@ -563,7 +563,7 @@ function HomePage({contracts,totalPortfolio,totalNet,ro,openC,openModal,exportB,
           </div>
           <div className="prog-bg" style={{margin:"10px 0 12px"}}>
             <div className="prog-fill" style={{width:spent+"%",
-              background:spent>80?"linear-gradient(90deg,#fbbf24,#f87171)":spent>50?"linear-gradient(90deg,#6366f1,#fbbf24)":"linear-gradient(90deg,#4f46e5,#818cf8)"}}/>
+              background:spent>80?"linear-gradient(90deg,#f59e0b,#f87171)":spent>50?"linear-gradient(90deg,#d97706,#fbbf24)":"linear-gradient(90deg,#92400e,#f59e0b)"}}/>
           </div>
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-end"}}>
             <div>
@@ -586,11 +586,11 @@ function HomePage({contracts,totalPortfolio,totalNet,ro,openC,openModal,exportB,
       {/* Add new */}
       {!ro&&<div className="icard" onClick={()=>openModal("new-contract")} style={{
         cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",
-        minHeight:175,border:"1.5px dashed rgba(99,102,241,0.18)",background:"transparent",transition:"all 0.25s",
+        minHeight:175,border:"1.5px dashed rgba(251,191,36,0.2)",background:"transparent",transition:"all 0.25s",
         animation:`cardReveal 0.48s cubic-bezier(0.16,1,0.3,1) ${Math.min(contracts.length*0.06,0.3)}s both`}}
-        onMouseEnter={e=>{e.currentTarget.style.borderColor="rgba(99,102,241,0.38)";e.currentTarget.style.background="rgba(99,102,241,0.04)"}}
-        onMouseLeave={e=>{e.currentTarget.style.borderColor="rgba(99,102,241,0.18)";e.currentTarget.style.background="transparent"}}>
-        <div style={{width:48,height:48,border:"1.5px dashed rgba(99,102,241,0.25)",borderRadius:16,display:"flex",alignItems:"center",justifyContent:"center",fontSize:24,color:"rgba(99,102,241,0.35)",marginBottom:12}}>+</div>
+        onMouseEnter={e=>{e.currentTarget.style.borderColor="rgba(251,191,36,0.42)";e.currentTarget.style.background="rgba(251,191,36,0.04)"}}
+        onMouseLeave={e=>{e.currentTarget.style.borderColor="rgba(251,191,36,0.2)";e.currentTarget.style.background="transparent"}}>
+        <div style={{width:48,height:48,border:"1.5px dashed rgba(251,191,36,0.28)",borderRadius:16,display:"flex",alignItems:"center",justifyContent:"center",fontSize:24,color:"rgba(251,191,36,0.4)",marginBottom:12}}>+</div>
         <div style={{fontSize:12,fontWeight:700,color:"var(--t5)",letterSpacing:"0.02em"}}>New Contract</div>
       </div>}
     </div>
@@ -611,7 +611,7 @@ function DashboardPage({contracts,totalPortfolio,totalNet,auditLog}){
   const hCol=healthPct>=70?"#34d399":healthPct>=40?"#fbbf24":"#f87171";
   const auditEntries=auditLog||[];
   const kpis=[
-    {label:"Portfolio Value",val:fmtShort(totalPortfolio),sub:contracts.length+" active contracts",color:"#818cf8",bg:"linear-gradient(135deg,rgba(99,102,241,0.13),rgba(99,102,241,0.05))",border:"rgba(99,102,241,0.22)",icon:"◈"},
+    {label:"Portfolio Value",val:fmtShort(totalPortfolio),sub:contracts.length+" active contracts",color:"#fbbf24",bg:"linear-gradient(135deg,rgba(251,191,36,0.13),rgba(251,191,36,0.05))",border:"rgba(251,191,36,0.22)",icon:"◈"},
     {label:"Revenue In",val:fmtShort(totalRev),sub:"total received",color:"#34d399",bg:"linear-gradient(135deg,rgba(52,211,153,0.11),rgba(52,211,153,0.04))",border:"rgba(52,211,153,0.22)",icon:"↑"},
     {label:"Total Costs",val:fmtShort(totalCosts),sub:"all expenses",color:"#f87171",bg:"linear-gradient(135deg,rgba(248,113,113,0.11),rgba(248,113,113,0.04))",border:"rgba(248,113,113,0.22)",icon:"↓"},
     {label:"Net Balance",val:(totalNet>=0?"+":"")+fmtShort(totalNet),sub:overallMargin+"% portfolio margin",color:totalNet>=0?"#34d399":"#f87171",bg:totalNet>=0?"linear-gradient(135deg,rgba(52,211,153,0.11),rgba(52,211,153,0.04))":"linear-gradient(135deg,rgba(248,113,113,0.11),rgba(248,113,113,0.04))",border:totalNet>=0?"rgba(52,211,153,0.22)":"rgba(248,113,113,0.22)",icon:totalNet>=0?"▲":"▼"},
@@ -654,7 +654,7 @@ function DashboardPage({contracts,totalPortfolio,totalNet,auditLog}){
                 const n=cNet(c);
                 const costs=c.items.filter(i=>!isIncome(i.type)).reduce((s,i)=>s+i.amount,0);
                 const pct=c.value>0?Math.min(100,(costs/c.value)*100):0;
-                const barColor=pct>80?"linear-gradient(90deg,#f59e0b,#f87171)":pct>50?"linear-gradient(90deg,#6366f1,#fbbf24)":"linear-gradient(90deg,#4f46e5,#34d399)";
+                const barColor=pct>80?"linear-gradient(90deg,#f59e0b,#f87171)":pct>50?"linear-gradient(90deg,#d97706,#fbbf24)":"linear-gradient(90deg,#92400e,#f59e0b)";
                 return(
                   <div key={c.id}>
                     <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:8}}>
@@ -764,8 +764,8 @@ function DashboardPage({contracts,totalPortfolio,totalNet,auditLog}){
               const isCreate=entry.action.includes("Created");
               const isDelete=entry.action.includes("Deleted");
               const isContractAction=entry.action.includes("Contract");
-              const actionColor=isCreate?"#34d399":isDelete?"#f87171":isContractAction?"#818cf8":"#60a5fa";
-              const actionBg=isCreate?"rgba(52,211,153,0.1)":isDelete?"rgba(248,113,113,0.1)":isContractAction?"rgba(99,102,241,0.1)":"rgba(96,165,250,0.1)";
+              const actionColor=isCreate?"#34d399":isDelete?"#f87171":isContractAction?"#fbbf24":"#f59e0b";
+              const actionBg=isCreate?"rgba(52,211,153,0.1)":isDelete?"rgba(248,113,113,0.1)":isContractAction?"rgba(251,191,36,0.1)":"rgba(245,158,11,0.1)";
               const ts=new Date(entry.ts);
               const dateStr=ts.toLocaleDateString("en-AE",{day:"numeric",month:"short",year:"numeric"});
               const timeStr=ts.toLocaleTimeString("en-AE",{hour:"2-digit",minute:"2-digit",hour12:true});
@@ -776,7 +776,7 @@ function DashboardPage({contracts,totalPortfolio,totalNet,auditLog}){
                   <div style={{flex:1,minWidth:0}}>
                     <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:4,flexWrap:"wrap"}}>
                       <span style={{fontSize:12,fontWeight:700,color:"var(--t1)",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{entry.contractName}</span>
-                      <span style={{fontSize:9,fontWeight:700,color:"var(--a3)",background:"rgba(99,102,241,0.12)",border:"1px solid rgba(99,102,241,0.22)",borderRadius:6,padding:"2px 7px",letterSpacing:"0.05em",flexShrink:0}}>{entry.user}</span>
+                      <span style={{fontSize:9,fontWeight:700,color:"var(--a3)",background:"rgba(251,191,36,0.1)",border:"1px solid rgba(251,191,36,0.22)",borderRadius:6,padding:"2px 7px",letterSpacing:"0.05em",flexShrink:0}}>{entry.user}</span>
                     </div>
                     {entry.detail&&<div style={{fontSize:11,color:"var(--t3)",marginBottom:4}}>{entry.detail}</div>}
                     <div style={{fontSize:9.5,color:"var(--t5)",display:"flex",alignItems:"center",gap:6}}>
@@ -810,13 +810,13 @@ function DetailPage({active,rev,exp,sal,mat,oth,totalCost,net,margin,ro,filtered
 
     {/* Header */}
     <div className="sect" style={{marginBottom:12}}>
-      <div style={{position:"absolute",top:-50,right:-50,width:160,height:160,background:"radial-gradient(circle,rgba(99,102,241,0.06),transparent 70%)",pointerEvents:"none"}}/>
+      <div style={{position:"absolute",top:-50,right:-50,width:160,height:160,background:"radial-gradient(circle,rgba(251,191,36,0.07),transparent 70%)",pointerEvents:"none"}}/>
       <div style={{fontSize:10,color:"var(--t4)",textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:10,fontWeight:700,display:"flex",flexWrap:"wrap",gap:"0 16px"}}>
         {active.client&&<span>{active.client}</span>}
         {active.startDate&&<span>Started {fmtDate(active.startDate)}</span>}
       </div>
       <h2 style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:26,fontWeight:700,color:"var(--t1)",letterSpacing:"-0.025em",marginBottom:active.notes?12:0,lineHeight:1.2}}>{active.name}</h2>
-      {active.notes&&<p style={{color:"var(--t3)",fontSize:13,lineHeight:1.75,maxWidth:620,borderLeft:"2px solid rgba(99,102,241,0.25)",paddingLeft:14}}>{active.notes}</p>}
+      {active.notes&&<p style={{color:"var(--t3)",fontSize:13,lineHeight:1.75,maxWidth:620,borderLeft:"2px solid rgba(251,191,36,0.3)",paddingLeft:14}}>{active.notes}</p>}
       {!ro&&<button className="btn-sm" style={{marginTop:16}} onClick={()=>openModal("edit-contract",{...active})}>✎ Edit Details</button>}
     </div>
 
@@ -923,14 +923,14 @@ function DetailPage({active,rev,exp,sal,mat,oth,totalCost,net,margin,ro,filtered
         <div>
           <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:3}}>
             <h3 style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:15,fontWeight:600,color:"var(--t2)"}}>AI Financial Analysis</h3>
-            <span style={{fontSize:9,fontWeight:700,color:"var(--a3)",background:"rgba(99,102,241,0.1)",border:"1px solid rgba(99,102,241,0.2)",borderRadius:8,padding:"2px 7px",letterSpacing:"0.06em"}}>BETA</span>
+            <span style={{fontSize:9,fontWeight:700,color:"var(--a3)",background:"rgba(251,191,36,0.1)",border:"1px solid rgba(251,191,36,0.22)",borderRadius:8,padding:"2px 7px",letterSpacing:"0.06em"}}>BETA</span>
           </div>
           {!aiText&&<p style={{fontSize:12,color:"var(--t4)"}}>Instant AI-powered analysis of this contract</p>}
         </div>
         <RippleBtn className="btn-g" onClick={genAI} disabled={aiLoad}
-          style={{fontSize:12,padding:"9px 18px",display:"flex",alignItems:"center",gap:8,borderColor:"rgba(99,102,241,0.22)",color:"var(--a3)"}}>
+          style={{fontSize:12,padding:"9px 18px",display:"flex",alignItems:"center",gap:8,borderColor:"rgba(251,191,36,0.25)",color:"var(--a3)"}}>
           {aiLoad
-            ?<><span style={{width:12,height:12,border:"1.5px solid rgba(99,102,241,0.2)",borderTop:"1.5px solid var(--a3)",borderRadius:"50%",animation:"spin 0.6s linear infinite"}}/> Analyzing...</>
+            ?<><span style={{width:12,height:12,border:"1.5px solid rgba(251,191,36,0.2)",borderTop:"1.5px solid var(--a3)",borderRadius:"50%",animation:"spin 0.6s linear infinite"}}/> Analyzing...</>
             :"✦ Generate Report"}
         </RippleBtn>
       </div>
@@ -1201,7 +1201,7 @@ function AppMain({user,onLogout}){
     }).slice().sort((a,b)=>new Date(b.date||0)-new Date(a.date||0));
   },[active,filter,search]);
 
-  const syncColor=sync==="error"?"#f87171":sync==="ok"?"#818cf8":"#fbbf24";
+  const syncColor=sync==="error"?"#f87171":sync==="ok"?"#fbbf24":"#f59e0b";
   const syncLabel=sync==="loading"?"Syncing":sync==="saving"?"Saving":sync==="ok"?"Live":"Offline";
 
   const isItemModal=modal==="new-item"||modal==="edit-item";
