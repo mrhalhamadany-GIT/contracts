@@ -11,10 +11,10 @@
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet"/>
   <style>
     :root {
-      --bg:#0c0a06; --bg2:#100d08; --card:#18130a; --card2:#1e180e;
-      --border:rgba(255,210,140,0.08); --border2:rgba(255,210,140,0.14);
-      --border-a:rgba(99,102,241,0.3);
-      --a:#6366f1; --a2:#4f46e5; --a3:#818cf8; --a4:#a5b4fc;
+      --bg:#100d07; --bg2:#150f09; --card:#1e160b; --card2:#261c0e;
+      --border:rgba(255,210,140,0.09); --border2:rgba(255,210,140,0.16);
+      --border-a:rgba(251,191,36,0.35);
+      --a:#f59e0b; --a2:#d97706; --a3:#fbbf24; --a4:#fde68a;
       --pos:#34d399; --pos2:#10b981;
       --neg:#f87171; --neg2:#ef4444;
       --gold:#fbbf24; --gold2:#f59e0b;
@@ -48,10 +48,10 @@
     /* ── BACKGROUND — warm obsidian depth ── */
     .bg-base{position:fixed;inset:0;pointer-events:none;z-index:0;
       background:
-        radial-gradient(ellipse 85% 55% at 75% -8%, rgba(251,191,36,0.14) 0%, transparent 58%),
-        radial-gradient(ellipse 55% 45% at -8% 85%, rgba(245,158,11,0.08) 0%, transparent 55%),
-        radial-gradient(ellipse 45% 40% at 50% 110%, rgba(180,100,0,0.09) 0%, transparent 55%),
-        linear-gradient(160deg, #130f07 0%, #0c0a06 45%, #0a0804 100%)}
+        radial-gradient(ellipse 85% 55% at 75% -8%, rgba(251,191,36,0.22) 0%, transparent 58%),
+        radial-gradient(ellipse 55% 45% at -8% 85%, rgba(245,158,11,0.13) 0%, transparent 55%),
+        radial-gradient(ellipse 45% 40% at 50% 110%, rgba(180,100,0,0.12) 0%, transparent 55%),
+        linear-gradient(160deg, #1a1208 0%, #120e06 45%, #0f0b04 100%)}
     .bg-dots{position:fixed;inset:0;pointer-events:none;z-index:0;
       background-image:
         linear-gradient(rgba(251,191,36,0.045) 1px, transparent 1px),
@@ -71,22 +71,22 @@
       transition:border-color 0.28s,transform 0.28s cubic-bezier(0.34,1.56,0.64,1),box-shadow 0.28s;
       position:relative;overflow:hidden}
     .icard::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;border-radius:20px 20px 0 0;
-      background:linear-gradient(90deg,transparent,rgba(99,102,241,0.2),transparent);transition:background 0.3s}
+      background:linear-gradient(90deg,transparent,rgba(251,191,36,0.2),transparent);transition:background 0.3s}
     .icard::after{content:'';position:absolute;inset:0;border-radius:inherit;
-      background:linear-gradient(135deg,rgba(99,102,241,0.04) 0%,transparent 55%);opacity:0;transition:opacity 0.3s}
+      background:linear-gradient(135deg,rgba(251,191,36,0.04) 0%,transparent 55%);opacity:0;transition:opacity 0.3s}
     .icard:hover{border-color:var(--border-a);transform:translateY(-4px);
-      box-shadow:0 20px 56px rgba(0,0,0,0.55),0 0 0 1px rgba(99,102,241,0.08),0 0 32px rgba(99,102,241,0.05)}
-    .icard:hover::before{background:linear-gradient(90deg,transparent,rgba(99,102,241,0.55),transparent)}
+      box-shadow:0 20px 56px rgba(0,0,0,0.5),0 0 0 1px rgba(251,191,36,0.1),0 0 32px rgba(251,191,36,0.06)}
+    .icard:hover::before{background:linear-gradient(90deg,transparent,rgba(251,191,36,0.6),transparent)}
     .icard:hover::after{opacity:1}
     .icard:active{transform:translateY(-1px) scale(0.99)}
 
     /* ── BUTTONS ── */
-    .btn-p{background:linear-gradient(145deg,#3730a3,var(--a2),var(--a));border:none;border-radius:var(--radius-sm);padding:11px 20px;color:#fff;font-weight:700;font-size:13px;letter-spacing:0.01em;box-shadow:0 4px 20px rgba(79,70,229,0.32),inset 0 1px 0 rgba(255,255,255,0.16);transition:all 0.22s cubic-bezier(0.34,1.56,0.64,1);position:relative;overflow:hidden}
-    .btn-p:hover{box-shadow:0 8px 32px rgba(79,70,229,0.52),inset 0 1px 0 rgba(255,255,255,0.2);transform:translateY(-2px) scale(1.02)}
-    .btn-p:active{transform:scale(0.98);box-shadow:0 2px 10px rgba(79,70,229,0.22)}
+    .btn-p{background:linear-gradient(145deg,#92400e,var(--a2),var(--a));border:none;border-radius:var(--radius-sm);padding:11px 20px;color:#1a0f00;font-weight:700;font-size:13px;letter-spacing:0.01em;box-shadow:0 4px 20px rgba(245,158,11,0.38),inset 0 1px 0 rgba(255,255,255,0.22);transition:all 0.22s cubic-bezier(0.34,1.56,0.64,1);position:relative;overflow:hidden}
+    .btn-p:hover{box-shadow:0 8px 32px rgba(245,158,11,0.58),inset 0 1px 0 rgba(255,255,255,0.26);transform:translateY(-2px) scale(1.02)}
+    .btn-p:active{transform:scale(0.98);box-shadow:0 2px 10px rgba(245,158,11,0.28)}
     .btn-p:disabled{opacity:0.42;pointer-events:none}
     .btn-g{background:rgba(255,255,255,0.045);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:11px 18px;color:var(--t2);font-weight:500;font-size:13px;transition:all 0.2s;outline:none}
-    .btn-g:hover{background:rgba(99,102,241,0.09);border-color:rgba(99,102,241,0.28);color:var(--a3);transform:translateY(-1px)}
+    .btn-g:hover{background:rgba(251,191,36,0.09);border-color:rgba(251,191,36,0.28);color:var(--a3);transform:translateY(-1px)}
     .btn-g:active{transform:scale(0.97)}
     .btn-sm{background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:10px;padding:8px 14px;color:var(--t3);font-size:12px;font-weight:500;transition:all 0.2s;outline:none}
     .btn-sm:hover{background:rgba(255,255,255,0.07);color:var(--t2);border-color:var(--border2);transform:translateY(-1px)}
@@ -96,7 +96,7 @@
 
     /* ── INPUTS ── */
     .inp{width:100%;background:rgba(255,255,255,0.04);border:1.5px solid rgba(255,255,255,0.08);border-radius:var(--radius-sm);padding:13px 16px;font-size:14px;color:var(--t1);transition:all 0.22s;outline:none;appearance:none;-webkit-appearance:none}
-    .inp:focus{border-color:var(--a);background:rgba(99,102,241,0.055);box-shadow:0 0 0 3px rgba(99,102,241,0.13)}
+    .inp:focus{border-color:var(--a);background:rgba(245,158,11,0.06);box-shadow:0 0 0 3px rgba(245,158,11,0.14)}
     .inp::placeholder{color:var(--t5)}
     .inp.error{border-color:var(--neg)!important;box-shadow:0 0 0 3px rgba(248,113,113,0.13)!important;animation:shake 0.3s ease}
     .inp::-webkit-calendar-picker-indicator{filter:invert(0.5) sepia(1) hue-rotate(200deg);cursor:pointer}
@@ -124,7 +124,7 @@
     /* ── TABLE ── */
     table{width:100%;border-collapse:collapse}
     .trow{border-bottom:1px solid rgba(255,255,255,0.04);transition:background 0.14s}
-    .trow:hover{background:rgba(99,102,241,0.04)}
+    .trow:hover{background:rgba(251,191,36,0.04)}
     .trow:last-child{border-bottom:none}
     th{text-align:left;padding:9px 14px;font-size:9px;color:var(--t4);text-transform:uppercase;letter-spacing:0.13em;font-weight:700;white-space:nowrap;border-bottom:1px solid rgba(255,255,255,0.06)}
     td{padding:11px 14px;vertical-align:middle}
@@ -142,7 +142,7 @@
 
     /* ── TOAST ── */
     .toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(100px);
-      background:rgba(10,11,24,0.97);border:1px solid rgba(99,102,241,0.25);border-radius:14px;
+      background:rgba(20,13,5,0.97);border:1px solid rgba(251,191,36,0.28);border-radius:14px;
       padding:12px 22px;font-size:13px;color:var(--a4);font-weight:600;z-index:9999;
       transition:transform 0.38s cubic-bezier(0.34,1.56,0.64,1);white-space:nowrap;
       box-shadow:0 16px 48px rgba(0,0,0,0.6),0 0 0 1px rgba(99,102,241,0.07);
@@ -162,7 +162,7 @@
       border:1px solid rgba(255,255,255,0.09);border-radius:24px;padding:32px;width:100%;
       overflow-y:auto;box-shadow:0 48px 120px rgba(0,0,0,0.75),0 0 0 1px rgba(99,102,241,0.07);position:relative}
     .modal-top{position:absolute;top:0;left:0;right:0;height:1px;
-      background:linear-gradient(90deg,transparent,rgba(99,102,241,0.5),transparent);border-radius:24px 24px 0 0}
+      background:linear-gradient(90deg,transparent,rgba(251,191,36,0.55),transparent);border-radius:24px 24px 0 0}
 
     /* ── HERO BANNER ── */
     .hero-banner{background:linear-gradient(135deg,rgba(120,80,0,0.22) 0%,rgba(80,50,0,0.1) 50%,rgba(251,191,36,0.1) 100%);
@@ -198,7 +198,7 @@
 
     /* ── PILL TABS ── */
     .pill-tab{padding:7px 14px;border-radius:20px;font-size:11.5px;font-weight:600;border:none;background:transparent;color:var(--t4);cursor:pointer;transition:all 0.18s;letter-spacing:0.01em;white-space:nowrap}
-    .pill-tab.active{background:rgba(99,102,241,0.15);color:var(--a3);box-shadow:0 0 0 1px rgba(99,102,241,0.28)}
+    .pill-tab.active{background:rgba(251,191,36,0.15);color:var(--a3);box-shadow:0 0 0 1px rgba(251,191,36,0.32)}
     .pill-tab:hover:not(.active){color:var(--t2)}
 
     /* ── DASHBOARD ── */
@@ -208,7 +208,7 @@
     .dash-kpi-val{font-size:24px;font-weight:800;letter-spacing:-0.03em;font-variant-numeric:tabular-nums;line-height:1.1;margin-bottom:6px}
     .dash-kpi-sub{font-size:10px;font-weight:500;opacity:0.45}
     .nav-tab{padding:7px 18px;border-radius:10px;font-size:12px;font-weight:600;border:none;background:transparent;color:var(--t3);cursor:pointer;transition:all 0.2s;letter-spacing:0.01em;white-space:nowrap}
-    .nav-tab.active{background:rgba(99,102,241,0.18);color:var(--a3);box-shadow:0 0 0 1px rgba(99,102,241,0.28)}
+    .nav-tab.active{background:rgba(251,191,36,0.18);color:var(--a3);box-shadow:0 0 0 1px rgba(251,191,36,0.32)}
     .nav-tab:hover:not(.active){color:var(--t1);background:rgba(255,255,255,0.05)}
 
     /* ── DIVIDER ── */
@@ -981,16 +981,16 @@ function Login({onLogin}){
   return <div style={{minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center",padding:20}}>
     <div style={{width:"100%",maxWidth:400,animation:"fadeUp 0.6s cubic-bezier(0.16,1,0.3,1)"}}>
       <div style={{textAlign:"center",marginBottom:48}}>
-        <div style={{width:76,height:76,background:"linear-gradient(145deg,#3730a3,var(--a2),var(--a))",borderRadius:24,display:"inline-flex",alignItems:"center",justifyContent:"center",fontSize:34,marginBottom:24,boxShadow:"0 16px 48px rgba(79,70,229,0.42),0 0 0 1px rgba(99,102,241,0.22),inset 0 1px 0 rgba(255,255,255,0.2)",animation:"float 3.5s ease-in-out infinite",color:"#fff"}}>◈</div>
+        <div style={{width:76,height:76,background:"linear-gradient(145deg,#92400e,var(--a2),var(--a))",borderRadius:24,display:"inline-flex",alignItems:"center",justifyContent:"center",fontSize:34,marginBottom:24,boxShadow:"0 16px 48px rgba(245,158,11,0.45),0 0 0 1px rgba(251,191,36,0.25),inset 0 1px 0 rgba(255,255,255,0.22)",animation:"float 3.5s ease-in-out infinite",color:"#1a0f00"}}>◈</div>
         <h1 style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:27,fontWeight:700,color:"var(--t1)",marginBottom:8,letterSpacing:"-0.025em"}}>
           Contract Accountant
-          <span style={{display:"inline-block",marginLeft:8,fontSize:10,fontWeight:800,background:"linear-gradient(135deg,var(--a),var(--a3))",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",border:"1px solid rgba(99,102,241,0.3)",borderRadius:6,padding:"2px 7px",verticalAlign:"middle",letterSpacing:"0.08em"}}>PRO</span>
+          <span style={{display:"inline-block",marginLeft:8,fontSize:10,fontWeight:800,background:"linear-gradient(135deg,var(--a),var(--a3))",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",border:"1px solid rgba(251,191,36,0.35)",borderRadius:6,padding:"2px 7px",verticalAlign:"middle",letterSpacing:"0.08em"}}>PRO</span>
         </h1>
         <p style={{fontSize:13,color:"var(--t4)",letterSpacing:"0.01em"}}>Sign in to your workspace</p>
       </div>
-      <div style={{background:"rgba(11,12,30,0.92)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:26,padding:"38px 34px",backdropFilter:"blur(28px)",boxShadow:"0 48px 120px rgba(0,0,0,0.65),0 0 0 1px rgba(99,102,241,0.05)",position:"relative",overflow:"hidden"}}>
-        <div style={{position:"absolute",top:0,left:0,right:0,height:1,background:"linear-gradient(90deg,transparent,rgba(99,102,241,0.5),transparent)"}}/>
-        <div style={{position:"absolute",top:-80,right:-80,width:200,height:200,background:"radial-gradient(circle,rgba(99,102,241,0.06),transparent 70%)",pointerEvents:"none"}}/>
+      <div style={{background:"rgba(18,13,6,0.96)",border:"1px solid rgba(255,210,140,0.12)",borderRadius:26,padding:"38px 34px",backdropFilter:"blur(28px)",boxShadow:"0 48px 120px rgba(0,0,0,0.6),0 0 0 1px rgba(251,191,36,0.06)",position:"relative",overflow:"hidden"}}>
+        <div style={{position:"absolute",top:0,left:0,right:0,height:1,background:"linear-gradient(90deg,transparent,rgba(251,191,36,0.55),transparent)"}}/>
+        <div style={{position:"absolute",top:-80,right:-80,width:200,height:200,background:"radial-gradient(circle,rgba(251,191,36,0.08),transparent 70%)",pointerEvents:"none"}}/>
         <div style={{marginBottom:18}}>
           <label className="lbl">Username <span className="req">*</span></label>
           <input className={"inp"+(err?" error":"")} value={u} onChange={e=>{setU(e.target.value);setErr("");}}
@@ -1219,11 +1219,11 @@ function AppMain({user,onLogout}){
     {/* Nav */}
     <nav className="nav">
       <div style={{display:"flex",alignItems:"center",gap:12,cursor:"pointer",flexShrink:0}} onClick={()=>{setPage("home");setActiveId(null);}}>
-        <div style={{width:38,height:38,background:"linear-gradient(145deg,#3730a3,var(--a2),var(--a))",borderRadius:12,display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,color:"#fff",boxShadow:"0 4px 18px rgba(79,70,229,0.42),inset 0 1px 0 rgba(255,255,255,0.18)",flexShrink:0,fontWeight:900}}>◈</div>
+        <div style={{width:38,height:38,background:"linear-gradient(145deg,#92400e,var(--a2),var(--a))",borderRadius:12,display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,color:"#1a0f00",boxShadow:"0 4px 18px rgba(245,158,11,0.45),inset 0 1px 0 rgba(255,255,255,0.2)",flexShrink:0,fontWeight:900}}>◈</div>
         <div className="hide-mob">
           <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:14,fontWeight:700,color:"var(--t1)",letterSpacing:"-0.01em",lineHeight:1.2,display:"flex",alignItems:"center",gap:6}}>
             Contract Accountant
-            <span style={{fontSize:9,fontWeight:800,background:"linear-gradient(135deg,var(--a),var(--a3))",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",letterSpacing:"0.08em"}}>PRO</span>
+            <span style={{fontSize:9,fontWeight:800,color:"var(--a3)",letterSpacing:"0.08em"}}>PRO</span>
           </div>
           <div style={{fontSize:10,color:"var(--t5)",letterSpacing:"0.03em"}}>Multi-Contract Financial Tracker</div>
         </div>
@@ -1250,7 +1250,7 @@ function AppMain({user,onLogout}){
 
         <div style={{width:1,height:20,background:"var(--border)"}} className="hide-mob"/>
         <div className="hide-mob" style={{display:"flex",alignItems:"center",gap:7}}>
-          <div style={{width:26,height:26,background:"rgba(99,102,241,0.14)",border:"1px solid rgba(99,102,241,0.28)",borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,color:"var(--a3)",fontWeight:800}}>
+          <div style={{width:26,height:26,background:"rgba(251,191,36,0.14)",border:"1px solid rgba(251,191,36,0.3)",borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,color:"var(--a3)",fontWeight:800}}>
             {user.username[0].toUpperCase()}
           </div>
           <span style={{fontSize:12,color:"var(--t3)",fontWeight:500}}>{user.username}</span>
