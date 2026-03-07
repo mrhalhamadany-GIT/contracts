@@ -370,7 +370,14 @@ function CloseBtn({onClick}){
 // TOP-LEVEL MODAL COMPONENTS  (stable refs — no focus loss on re-render)
 // ══════════════════════════════════════════════════════════════════════════════
 
-function ContractModal({modal,form,setForm,errors,onSave,onClose}){
+function ContractModal({modal,form,setForm,errors,onSave,onClose,ro}){
+  function handleFile(e){
+    const file=e.target.files[0];if(!file)return;
+    if(file.size>10*1024*1024){alert("File too large. Maximum size is 10MB.");return;}
+    const r=new FileReader();
+    r.onload=ev=>setForm(f=>({...f,contractFile:{name:file.name,size:file.size,data:ev.target.result}}));
+    r.readAsDataURL(file);e.target.value="";
+  }
   return <div className="modal-card" style={{maxWidth:560,maxHeight:"92vh"}}>
     <div className="modal-top"/>
     <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:26}}>
@@ -411,6 +418,31 @@ function ContractModal({modal,form,setForm,errors,onSave,onClose}){
           value={form.notes||""} onChange={e=>setForm(f=>({...f,notes:e.target.value}))}
           placeholder="Location, retention %, payment terms..."/>
       </div>
+      {!ro&&<div style={{gridColumn:"span 2"}} className="s2">
+        <label className="lbl">Contract Document <span style={{fontSize:9,color:"var(--a3)",fontWeight:700,letterSpacing:"0.05em"}}>PDF · ADMIN ONLY</span></label>
+        {form.contractFile
+          ?<div style={{display:"flex",alignItems:"center",gap:10,background:"rgba(251,191,36,0.07)",border:"1px solid rgba(251,191,36,0.22)",borderRadius:12,padding:"11px 14px"}}>
+            <span style={{fontSize:18}}>📄</span>
+            <div style={{flex:1,minWidth:0}}>
+              <div style={{fontSize:12,fontWeight:600,color:"var(--t1)",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{form.contractFile.name}</div>
+              <div style={{fontSize:10,color:"var(--t4)",marginTop:2}}>{(form.contractFile.size/1024).toFixed(0)} KB</div>
+            </div>
+            <button onClick={()=>setForm(f=>({...f,contractFile:null}))}
+              style={{background:"none",border:"none",color:"var(--t4)",cursor:"pointer",fontSize:16,padding:"4px 7px",borderRadius:6,transition:"color 0.15s",lineHeight:1}}
+              onMouseEnter={e=>e.currentTarget.style.color="#f87171"} onMouseLeave={e=>e.currentTarget.style.color="var(--t4)"}>✕</button>
+          </div>
+          :<label style={{display:"flex",alignItems:"center",gap:12,background:"rgba(255,255,255,0.03)",border:"1.5px dashed rgba(251,191,36,0.22)",borderRadius:12,padding:"16px",cursor:"pointer",transition:"all 0.2s"}}
+            onMouseEnter={e=>{e.currentTarget.style.borderColor="rgba(251,191,36,0.45)";e.currentTarget.style.background="rgba(251,191,36,0.04)"}}
+            onMouseLeave={e=>{e.currentTarget.style.borderColor="rgba(251,191,36,0.22)";e.currentTarget.style.background="rgba(255,255,255,0.03)"}}>
+            <span style={{fontSize:24,opacity:0.45}}>📄</span>
+            <div>
+              <div style={{fontSize:12,fontWeight:600,color:"var(--t2)"}}>Upload Contract PDF</div>
+              <div style={{fontSize:10,color:"var(--t4)",marginTop:2}}>Click to browse · PDF only · Max 10MB</div>
+            </div>
+            <input type="file" accept=".pdf,application/pdf" style={{display:"none"}} onChange={handleFile}/>
+          </label>
+        }
+      </div>}
     </div>
     <div style={{display:"flex",gap:10,marginTop:24}}>
       <RippleBtn className="btn-p" onClick={onSave} style={{flex:1,padding:"13px"}}>
@@ -835,7 +867,10 @@ function DetailPage({active,rev,exp,sal,mat,oth,totalCost,net,margin,ro,filtered
         <span style={{color:"var(--t5)",fontSize:10}}>›</span>
         <span style={{color:"var(--t2)",fontWeight:600}}>{active.name}</span>
       </div>
-      <button className="btn-sm" onClick={()=>exportOnePDF(active)} style={{fontSize:11,padding:"5px 12px"}}>↑ Export PDF</button>
+      <div style={{display:"flex",gap:8}}>
+        {active.contractFile&&<button className="btn-sm" onClick={()=>window.open(active.contractFile.data,"_blank")} style={{fontSize:11,padding:"5px 12px",color:"var(--a3)",borderColor:"rgba(251,191,36,0.25)"}}>📄 View Document</button>}
+        <button className="btn-sm" onClick={()=>exportOnePDF(active)} style={{fontSize:11,padding:"5px 12px"}}>↑ Export PDF</button>
+      </div>
     </div>
 
     {/* Header */}
@@ -1311,7 +1346,7 @@ function AppMain({user,onLogout}){
     {/* Modals — all top-level stable components */}
     {modal&&<div className="overlay" onClick={e=>{if(e.target===e.currentTarget)closeModal();}}>
       {(modal==="new-contract"||modal==="edit-contract")&&
-        <ContractModal modal={modal} form={form} setForm={setForm} errors={errors} onSave={saveContract} onClose={closeModal}/>}
+        <ContractModal modal={modal} form={form} setForm={setForm} errors={errors} onSave={saveContract} onClose={closeModal} ro={ro}/>}
       {isItemModal&&
         <ItemModal modal={modal} activeName={active?.name} form={form} setForm={setForm} errors={errors} onSave={saveItem} onClose={closeModal}/>}
       {modal==="delete-confirm"&&
