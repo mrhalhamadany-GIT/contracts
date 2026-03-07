@@ -235,6 +235,9 @@
     .dash-grid-charts{display:grid;grid-template-columns:1fr 340px;gap:16px;margin-bottom:16px}
     .dash-grid-main{display:grid;grid-template-columns:1fr 300px;gap:16px;margin-bottom:16px}
 
+    /* ── HERO STATS ── */
+    .hero-stats{display:flex;gap:36px;flex-wrap:wrap;align-items:flex-start}
+
     /* ── MOBILE BOTTOM NAV ── */
     .mobile-nav{display:none;position:fixed;bottom:0;left:0;right:0;z-index:300;
       background:rgba(12,9,5,0.97);border-top:1px solid rgba(255,210,140,0.12);
@@ -246,6 +249,7 @@
     .mobile-nav-btn .mn-icon{font-size:20px;line-height:1;margin-bottom:2px}
     .mobile-nav-btn.active{color:var(--a3)}
     .mobile-nav-btn.active .mn-icon{filter:drop-shadow(0 0 6px rgba(251,191,36,0.5))}
+    .mobile-nav-btn.primary{color:var(--a3)}
 
     /* ── RESPONSIVE ── */
     @media(max-width:640px){
@@ -256,19 +260,25 @@
       .form-2col{grid-template-columns:1fr!important}
       .s2{grid-column:span 1!important}
       .wrap{padding:16px 14px 90px!important}
-      .nav{padding:0 14px!important;height:54px}
+      .nav{padding:0 12px!important;height:54px;gap:8px}
       :root{--nav-h:54px}
       .type-grid{grid-template-columns:repeat(4,1fr)!important}
-      .modal-card{padding:22px 16px!important}
-      .hero-banner{padding:18px 18px!important}
-      .sect{padding:16px 16px!important}
+      .modal-card{padding:20px 14px!important;border-radius:18px!important}
+      .hero-banner{padding:18px 16px!important}
+      .sect{padding:14px 14px!important}
       .mobile-nav{display:flex}
+      .mob-hide-nav{display:none!important}
       .dash-grid-charts{grid-template-columns:1fr!important}
       .dash-grid-main{grid-template-columns:1fr!important}
-      .dash-kpi{flex:1 1 calc(50% - 6px)!important;min-width:calc(50% - 6px)!important;padding:16px 14px!important}
-      .dash-kpi-val{font-size:18px!important}
+      .dash-kpi{flex:1 1 calc(50% - 6px)!important;min-width:calc(50% - 6px)!important;padding:14px 12px!important}
+      .dash-kpi-val{font-size:17px!important}
       .month-stats{gap:8px!important;font-size:10px!important}
       .month-header{flex-wrap:wrap;gap:4px}
+      .hero-stats{gap:18px!important}
+      .sync-label{display:none}
+      .breadcrumb-actions{flex-wrap:wrap;gap:6px!important}
+      .stats-row .stat{padding:12px 14px!important}
+      .stat-val{font-size:13px!important}
     }
   </style>
 </head>
@@ -725,7 +735,7 @@ function HomePage({contracts,totalPortfolio,totalNet,ro,openC,openModal}){
       <h1 style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:30,fontWeight:700,color:"var(--t1)",marginBottom:20,letterSpacing:"-0.025em",lineHeight:1.1}}>
         Your <span style={{background:"linear-gradient(135deg,var(--a3),var(--a4))",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent"}}>Contracts</span>
       </h1>
-      <div style={{display:"flex",gap:36,flexWrap:"wrap",alignItems:"flex-start"}}>
+      <div className="hero-stats">
         <div>
           <div style={{fontSize:9,color:"var(--t4)",textTransform:"uppercase",letterSpacing:"0.12em",marginBottom:5,fontWeight:700}}>Total Value</div>
           <div style={{fontSize:24,fontWeight:700,letterSpacing:"-0.02em"}}><AnimNum value={totalPortfolio} color="#fbbf24"/></div>
@@ -1105,18 +1115,18 @@ function DetailPage({active,rev,exp,sal,mat,oth,totalCost,net,margin,ro,filtered
   return <div style={{animation:"fadeUp 0.4s cubic-bezier(0.16,1,0.3,1)"}}>
 
     {/* Breadcrumb */}
-    <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:22,fontSize:12,justifyContent:"space-between"}}>
-      <div style={{display:"flex",alignItems:"center",gap:8}}>
-        <button style={{background:"none",border:"none",cursor:"pointer",color:"var(--t3)",fontWeight:500,transition:"color 0.15s",padding:0,fontSize:12}}
+    <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:18,fontSize:12,justifyContent:"space-between",flexWrap:"wrap"}}>
+      <div style={{display:"flex",alignItems:"center",gap:8,minWidth:0,flex:1}}>
+        <button style={{background:"none",border:"none",cursor:"pointer",color:"var(--t3)",fontWeight:500,transition:"color 0.15s",padding:0,fontSize:12,whiteSpace:"nowrap"}}
           onMouseEnter={e=>e.currentTarget.style.color="var(--a3)"} onMouseLeave={e=>e.currentTarget.style.color="var(--t3)"}
-          onClick={onBack}>← Contracts</button>
+          onClick={onBack}>← Back</button>
         <span style={{color:"var(--t5)",fontSize:10}}>›</span>
-        <span style={{color:"var(--t2)",fontWeight:600}}>{active.name}</span>
+        <span style={{color:"var(--t2)",fontWeight:600,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{active.name}</span>
       </div>
-      <div style={{display:"flex",gap:8}}>
+      <div className="breadcrumb-actions" style={{display:"flex",gap:8,flexShrink:0}}>
         {active.contractFile&&<a href={active.contractFile.url} target="_blank" rel="noopener noreferrer"
-          className="btn-sm" style={{fontSize:11,padding:"5px 12px",color:"var(--a3)",borderColor:"rgba(251,191,36,0.25)",textDecoration:"none",display:"inline-flex",alignItems:"center",gap:5}}>📄 View Document</a>}
-        <button className="btn-sm" onClick={()=>exportOnePDF(active)} style={{fontSize:11,padding:"5px 12px"}}>↑ Export PDF</button>
+          className="btn-sm" style={{fontSize:11,padding:"5px 10px",color:"var(--a3)",borderColor:"rgba(251,191,36,0.25)",textDecoration:"none",display:"inline-flex",alignItems:"center",gap:4}}>📄 Doc</a>}
+        <button className="btn-sm" onClick={()=>exportOnePDF(active)} style={{fontSize:11,padding:"5px 10px"}}>↑ PDF</button>
       </div>
     </div>
 
@@ -1680,15 +1690,15 @@ function AppMain({user,onLogout}){
       </div>
 
       <div style={{display:"flex",gap:8,alignItems:"center",flexShrink:0}}>
-        <div style={{display:"flex",alignItems:"center",gap:7,fontSize:11,color:syncColor,background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.07)",borderRadius:20,padding:"5px 12px",whiteSpace:"nowrap",transition:"color 0.3s"}}>
+        <div style={{display:"flex",alignItems:"center",gap:6,fontSize:11,color:syncColor,background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.07)",borderRadius:20,padding:"5px 10px",whiteSpace:"nowrap",transition:"color 0.3s"}}>
           <span className={"sync-dot"+(sync!=="ok"?" pulse":"")} style={{background:syncColor,transition:"background 0.3s"}}/>
-          {syncLabel}
+          <span className="sync-label">{syncLabel}</span>
         </div>
 
         {page==="detail"&&active&&<>
           {!ro&&<button className="btn-g hide-mob" style={{fontSize:12,padding:"8px 16px"}} onClick={()=>openModal("edit-contract",{...active})}>✎ Edit</button>}
-          {!ro&&<RippleBtn className="btn-p" style={{fontSize:12,padding:"9px 16px"}} onClick={()=>openModal("new-item",{date:today()})}>+ Entry</RippleBtn>}
-          <button className="btn-g" style={{fontSize:12,padding:"8px 14px"}} onClick={()=>{setPage("home");setActiveId(null);}}>← Back</button>
+          {!ro&&<RippleBtn className="btn-p mob-hide-nav" style={{fontSize:12,padding:"9px 16px"}} onClick={()=>openModal("new-item",{date:today()})}>+ Entry</RippleBtn>}
+          <button className="btn-g mob-hide-nav" style={{fontSize:12,padding:"8px 14px"}} onClick={()=>{setPage("home");setActiveId(null);}}>← Back</button>
         </>}
         {page==="home"&&!ro&&<RippleBtn className="btn-p hide-mob" style={{fontSize:12,padding:"9px 16px"}} onClick={()=>openModal("new-contract")}>+ New Contract</RippleBtn>}
 
@@ -1700,7 +1710,7 @@ function AppMain({user,onLogout}){
           <span style={{fontSize:12,color:"var(--t3)",fontWeight:500}}>{user.username}</span>
           {ro&&<span style={{fontSize:9,color:"#fbbf24",background:"rgba(251,191,36,0.1)",border:"1px solid rgba(251,191,36,0.2)",borderRadius:8,padding:"2px 8px",fontWeight:800,letterSpacing:"0.05em"}}>VIEW ONLY</span>}
         </div>
-        <button className="btn-sm" onClick={onLogout} title="Sign out" style={{padding:"7px 13px",fontSize:11}}>⏻ Out</button>
+        <button className="btn-sm" onClick={onLogout} title="Sign out" style={{padding:"7px 11px",fontSize:11}}>⏻<span className="hide-mob"> Out</span></button>
       </div>
     </nav>
 
@@ -1720,14 +1730,32 @@ function AppMain({user,onLogout}){
       {page==="dashboard"&&<DashboardPage contracts={contracts} totalPortfolio={totalPortfolio} totalNet={totalNet} auditLog={auditLog} setAuditLog={setAuditLog} ro={ro} exportB={exportB} importB={importB} importOne={importOne}/>}
     </div>
 
-    {/* Mobile bottom navigation */}
+    {/* Mobile bottom navigation — context-aware */}
     <nav className="mobile-nav">
-      <button className={"mobile-nav-btn"+(page!=="dashboard"?" active":"")} onClick={()=>{setPage("home");setActiveId(null);}}>
-        <span className="mn-icon">◱</span>Contracts
-      </button>
-      <button className={"mobile-nav-btn"+(page==="dashboard"?" active":"")} onClick={()=>setPage("dashboard")}>
-        <span className="mn-icon">◫</span>Dashboard
-      </button>
+      {page==="detail"&&active
+        ?<>
+          <button className="mobile-nav-btn active" onClick={()=>{setPage("home");setActiveId(null);}}>
+            <span className="mn-icon">←</span>Back
+          </button>
+          {!ro&&<button className="mobile-nav-btn primary" onClick={()=>openModal("new-item",{date:today()})}>
+            <span className="mn-icon">+</span>Add Entry
+          </button>}
+          {!ro&&<button className="mobile-nav-btn" onClick={()=>openModal("edit-contract",{...active})}>
+            <span className="mn-icon">✎</span>Edit
+          </button>}
+        </>
+        :<>
+          <button className={"mobile-nav-btn"+(page==="home"?" active":"")} onClick={()=>{setPage("home");setActiveId(null);}}>
+            <span className="mn-icon">◱</span>Contracts
+          </button>
+          {!ro&&<button className="mobile-nav-btn primary" onClick={()=>openModal("new-contract")}>
+            <span className="mn-icon">+</span>New
+          </button>}
+          <button className={"mobile-nav-btn"+(page==="dashboard"?" active":"")} onClick={()=>setPage("dashboard")}>
+            <span className="mn-icon">◫</span>Dashboard
+          </button>
+        </>
+      }
     </nav>
   </div>;
 }
