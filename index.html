@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0"/>
+  <meta name="mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+  <meta name="apple-mobile-web-app-title" content="CAP"/>
+  <title>Contract Accountant PRO</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --bg:#070a08; --bg2:#0c110d; --card:#0f1510; --card2:#131a14;
+      --border:rgba(255,255,255,0.06); --border2:rgba(255,255,255,0.11);
+      --g:#00e676; --g2:#00c853; --g3:#69f0ae;
+      --red:#ff4444; --amber:#ffa726; --blue:#64b5f6; --purple:#ce93d8; --cyan:#4dd0e1; --yellow:#fff176;
+      --t1:#f0fdf0; --t2:#a5d6a7; --t3:#66bb6a; --t4:#4a7a4a; --t5:#2a4a2a;
+      --shadow:0 24px 80px rgba(0,0,0,0.7);
+      --radius:18px;
+    }
+    *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+    html{scroll-behavior:smooth}
+    body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(--t1);min-height:100vh;overflow-x:hidden}
+    input,select,textarea,button{font-family:'Plus Jakarta Sans',sans-serif}
+    button{cursor:pointer}
+    ::-webkit-scrollbar{width:3px;height:3px}
+    ::-webkit-scrollbar-track{background:transparent}
+    ::-webkit-scrollbar-thumb{background:var(--t5);border-radius:3px}
+
+    /* ── ANIMATIONS ── */
+    @keyframes fadeUp{0%{opacity:0;transform:translateY(24px)}100%{opacity:1;transform:translateY(0)}}
+    @keyframes fadeIn{0%{opacity:0}100%{opacity:1}}
+    @keyframes slideRight{0%{opacity:0;transform:translateX(-16px)}100%{opacity:1;transform:translateX(0)}}
+    @keyframes scaleIn{0%{opacity:0;transform:scale(0.92)}100%{opacity:1;transform:scale(1)}}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+    @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+    @keyframes shimmer{0%{background-position:-400px 0}100%{background-position:400px 0}}
+    @keyframes ripple{0%{transform:scale(0);opacity:0.6}100%{transform:scale(4);opacity:0}}
+    @keyframes glowPulse{0%,100%{box-shadow:0 0 20px rgba(0,230,118,0.15)}50%{box-shadow:0 0 40px rgba(0,230,118,0.35),0 0 80px rgba(0,230,118,0.1)}}
+    @keyframes countUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+    @keyframes borderFlow{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+    @keyframes typewriter{from{width:0}to{width:100%}}
+    @keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+    @keyframes progressFill{from{width:0%}to{width:var(--w)}}
+    @keyframes cardReveal{0%{opacity:0;transform:translateY(30px) scale(0.96)}100%{opacity:1;transform:translateY(0) scale(1)}}
+    @keyframes numberTick{0%{transform:translateY(-100%);opacity:0}100%{transform:translateY(0);opacity:1}}
+
+    /* ── BACKGROUND ── */
+    .bg-grid{position:fixed;inset:0;pointer-events:none;z-index:0;
+      background-image:linear-gradient(rgba(0,230,118,0.025) 1px,transparent 1px),
+        linear-gradient(90deg,rgba(0,230,118,0.025) 1px,transparent 1px);
+      background-size:48px 48px;animation:fadeIn 2s ease}
+    .bg-orb1{position:fixed;width:700px;height:700px;border-radius:50%;background:radial-gradient(circle,rgba(0,200,83,0.07) 0%,transparent 65%);top:-200px;right:-200px;pointer-events:none;z-index:0}
+    .bg-orb2{position:fixed;width:500px;height:500px;border-radius:50%;background:radial-gradient(circle,rgba(0,100,50,0.05) 0%,transparent 65%);bottom:-100px;left:-100px;pointer-events:none;z-index:0}
+    .noise{position:fixed;inset:0;pointer-events:none;z-index:0;opacity:0.018;
+      background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");background-size:180px}
+
+    /* ── GLASS ── */
+    .glass{background:rgba(15,21,16,0.7);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border:1px solid var(--border)}
+    .glass2{background:rgba(19,26,20,0.5);backdrop-filter:blur(16px);border:1px solid var(--border)}
+
+    /* ── INTERACTIVE CARD ── */
+    .icard{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);transition:all 0.3s cubic-bezier(0.34,1.56,0.64,1);position:relative;overflow:hidden}
+    .icard::before{content:'';position:absolute;inset:0;border-radius:var(--radius);background:linear-gradient(135deg,rgba(0,230,118,0.04),transparent);opacity:0;transition:opacity 0.3s}
+    .icard:hover{border-color:rgba(0,230,118,0.22);transform:translateY(-4px);box-shadow:0 20px 60px rgba(0,0,0,0.5),0 0 0 1px rgba(0,230,118,0.1)}
+    .icard:hover::before{opacity:1}
+    .icard:active{transform:translateY(-2px) scale(0.99)}
+
+    /* ── BUTTONS ── */
+    .btn-p{background:linear-gradient(135deg,var(--g2),var(--g));border:none;border-radius:12px;padding:11px 20px;color:#001a08;font-weight:700;font-size:13px;letter-spacing:0.01em;box-shadow:0 4px 20px rgba(0,200,83,0.25);transition:all 0.2s cubic-bezier(0.34,1.56,0.64,1);position:relative;overflow:hidden}
+    .btn-p::after{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,0.15),transparent);opacity:0;transition:opacity 0.2s}
+    .btn-p:hover{box-shadow:0 8px 32px rgba(0,200,83,0.45);transform:translateY(-2px) scale(1.02)}
+    .btn-p:hover::after{opacity:1}
+    .btn-p:active{transform:translateY(0) scale(0.98)}
+    .btn-g{background:rgba(255,255,255,0.04);border:1px solid var(--border2);border-radius:12px;padding:11px 18px;color:var(--t2);font-weight:500;font-size:13px;transition:all 0.2s}
+    .btn-g:hover{background:rgba(0,230,118,0.08);border-color:rgba(0,230,118,0.25);color:var(--g);transform:translateY(-1px)}
+    .btn-g:active{transform:scale(0.97)}
+    .btn-sm{background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:10px;padding:8px 14px;color:var(--t4);font-size:12px;font-weight:500;transition:all 0.2s}
+    .btn-sm:hover{background:rgba(255,255,255,0.07);color:var(--t2);border-color:var(--border2)}
+
+    /* ── INPUTS ── */
+    .inp{width:100%;background:rgba(255,255,255,0.04);border:1.5px solid rgba(255,255,255,0.09);border-radius:12px;padding:13px 16px;font-size:14px;color:var(--t1);box-sizing:border-box;transition:all 0.25s;outline:none}
+    .inp:focus{border-color:var(--g);background:rgba(0,230,118,0.04);box-shadow:0 0 0 3px rgba(0,230,118,0.1)}
+    .inp::placeholder{color:var(--t5)}
+    .inp.error{border-color:var(--red)!important;box-shadow:0 0 0 3px rgba(255,68,68,0.12)!important;animation:shake 0.3s ease}
+    label.lbl{font-size:10px;color:var(--t4);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:7px;display:flex;align-items:center;gap:4px;font-weight:600}
+    label.lbl .req{color:var(--red);font-size:12px;line-height:1}
+
+    @keyframes shake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-4px)}40%,80%{transform:translateX(4px)}}
+
+    /* ── TYPE BUTTONS ── */
+    .type-btn{padding:10px 8px;border-radius:12px;border:1.5px solid rgba(255,255,255,0.07);background:transparent;font-size:11px;font-weight:700;letter-spacing:0.03em;cursor:pointer;transition:all 0.2s cubic-bezier(0.34,1.56,0.64,1);position:relative;overflow:hidden}
+    .type-btn:hover{transform:translateY(-2px) scale(1.04)}
+    .type-btn.active{transform:translateY(-2px) scale(1.04)}
+    .type-btn::after{content:'';position:absolute;inset:0;opacity:0;background:rgba(255,255,255,0.1);transition:opacity 0.15s}
+    .type-btn:active::after{opacity:1}
+
+    /* ── BADGE ── */
+    .badge{display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:700;padding:4px 10px;border-radius:20px;letter-spacing:0.04em;white-space:nowrap}
+
+    /* ── STAT CARD ── */
+    .stat{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:16px;padding:16px 18px;flex:1;min-width:120px;position:relative;overflow:hidden;transition:all 0.3s}
+    .stat:hover{transform:translateY(-2px);border-color:rgba(255,255,255,0.14)}
+    .stat-top{position:absolute;top:0;left:0;right:0;height:1.5px;border-radius:1px}
+    .stat-label{font-size:9px;color:var(--t4);text-transform:uppercase;letter-spacing:0.12em;margin-bottom:8px;font-weight:600}
+    .stat-val{font-size:15px;font-weight:700;letter-spacing:-0.01em;font-variant-numeric:tabular-nums;line-height:1.2}
+    .stat-sub{font-size:10px;color:var(--t4);margin-top:5px;font-weight:500}
+
+    /* ── TABLE ── */
+    .trow{border-bottom:1px solid rgba(255,255,255,0.04);transition:background 0.15s}
+    .trow:hover{background:rgba(255,255,255,0.025)}
+    .trow:last-child{border-bottom:none}
+
+    /* ── PROGRESS BAR ── */
+    .prog-bg{background:rgba(255,255,255,0.06);border-radius:4px;height:3px;overflow:hidden;margin:12px 0 14px}
+    .prog-fill{height:100%;border-radius:4px;transition:width 0.8s cubic-bezier(0.34,1.56,0.64,1)}
+
+    /* ── SYNC DOT ── */
+    .sync-dot{width:6px;height:6px;border-radius:50%;display:inline-block;animation:pulse 1.5s ease infinite}
+
+    /* ── TOAST ── */
+    .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:#1a2e1a;border:1px solid rgba(0,230,118,0.3);border-radius:12px;padding:12px 20px;font-size:13px;color:var(--g3);font-weight:600;z-index:9999;transition:transform 0.4s cubic-bezier(0.34,1.56,0.64,1);white-space:nowrap;box-shadow:0 8px 32px rgba(0,0,0,0.5)}
+    .toast.show{transform:translateX(-50%) translateY(0)}
+
+    /* ── NAV ── */
+    .nav{background:rgba(7,10,8,0.85);backdrop-filter:blur(28px);border-bottom:1px solid var(--border);height:64px;position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:0 24px}
+
+    /* ── MODAL OVERLAY ── */
+    .overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(4px);z-index:200;display:flex;align-items:center;justify-content:center;animation:fadeIn 0.2s ease;padding:20px}
+
+    /* ── SCROLLABLE PANEL ── */
+    .panel{animation:scaleIn 0.3s cubic-bezier(0.34,1.56,0.64,1)}
+
+    /* ── RESPONSIVE ── */
+    @media(max-width:640px){
+      .hide-mob{display:none!important}
+      .cards-grid{grid-template-columns:1fr!important}
+      .stats-grid{grid-template-columns:1fr 1fr!important}
+      .form-2col{grid-template-columns:1fr!important}
+      .s2{grid-column:span 1!important}
+      .wrap{padding:16px 14px!important}
+      .nav{padding:0 14px!important}
+      .type-grid{grid-template-columns:repeat(4,1fr)!important}
+    }
+  </style>
+</head>
+<body>
+<div class="noise"></div>
+<div class="bg-grid"></div>
+<div class="bg-orb1"></div>
+<div class="bg-orb2"></div>
+<div id="app" style="position:relative;z-index:1"></div>
+
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script type="text/babel">
+const {useState,useEffect,useRef,useCallback} = React;
+
+// ── SUPABASE ─────────────────────────────────────────────────────────────────
+const SB_URL     = "https://kthsoitkkbfvovtnrlhz.supabase.co";
+const SB_ANON    = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt0aHNvaXRra2Jmdm92dG5ybGh6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI4MTkzMzUsImV4cCI6MjA4ODM5NTMzNX0.DxnWy8ngWGnRZjYjvaBBP5Wnisg9sbsX6PbXriIpzJc";
+const SB_SERVICE = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt0aHNvaXRra2Jmdm92dG5ybGh6Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MjgxOTMzNSwiZXhwIjoyMDg4Mzk1MzM1fQ.n6RIS49MYYjyHlMuLfHZQX6FLpISv2yV8gWmVPYMVb8";
+const SB_H = {"apikey":SB_ANON,"Authorization":"Bearer "+SB_SERVICE,"Content-Type":"application/json","Prefer":"resolution=merge-duplicates"};
+async function cloudRead(){const r=await fetch(SB_URL+"/rest/v1/contracts?select=data&limit=1",{headers:SB_H});if(!r.ok)throw new Error(r.status);const rows=await r.json();return(rows&&rows.length)?rows[0].data:null;}
+async function cloudWrite(data){const r=await fetch(SB_URL+"/rest/v1/contracts?id=eq.1",{method:"PATCH",headers:SB_H,body:JSON.stringify({data})});if(!r.ok&&r.status!==204)throw new Error(r.status);return true;}
+
+// ── USERS ────────────────────────────────────────────────────────────────────
+const USERS=[{username:"MRH",password:"MRH.alhamdany",role:"admin"},{username:"Ibrahim",password:"Ibrahim123",role:"readonly"}];
+
+// ── DEFAULTS ─────────────────────────────────────────────────────────────────
+const DEFAULTS=[
+  {id:"khalifa-001",name:"Khalifa Villa",client:"Dr. Mahmoud Al-Kamali",value:1674843.46,startDate:"2026-02-23",notes:"Al Mireef, Plot SE-45/286, Abu Dhabi. 7% retention. Payment within 30 days of consultant approval.",items:[]},
+  {id:"shamkha-001",name:"Shamkha Villa",client:"Khalfan Mohammed Saeed bin Maran Al Zaheri",value:2450000,startDate:"2026-02-26",notes:"Al Shamkha, Abu Dhabi - Plot 12, #039-000-002-509. Al Maghreb Al Arabi Consultants. 8% retention.",items:[]},
+  {id:"shamkha-002",name:"Shamkha Villa 2",client:"Saeed Mohammed bin Maran Al Zaheri",value:2450000,startDate:"2026-02-26",notes:"Al Shamkha, Abu Dhabi - Plot 12, #39-002-000-512. Al Maghreb Al Arabi Consultants. 8% retention.",items:[]},
+  {id:"shamkha-003",name:"Shamkha Villa 3",client:"Khalid Mohammed Saeed bin Maran Al Zaheri",value:2380000,startDate:"2026-02-26",notes:"Al Shamkha, Abu Dhabi - Plot 12, #39-002-000-511. Al Maghreb Al Arabi Consultants. 8% retention.",items:[]}
+];
+function mergeDefaults(d){let r=Array.isArray(d)?[...d]:[];DEFAULTS.forEach(def=>{if(!r.find(c=>c.id===def.id))r=[def,...r];});return r;}
+
+const TYPES=["Revenue","Expense","Salary","Cash","Materials","Transport","Other"];
+const TC={Revenue:{bg:"rgba(0,230,118,0.13)",c:"#00e676",dot:"#00e676"},Expense:{bg:"rgba(255,68,68,0.13)",c:"#ff4444",dot:"#ff4444"},Salary:{bg:"rgba(255,167,38,0.13)",c:"#ffa726",dot:"#ffa726"},Cash:{bg:"rgba(77,208,225,0.13)",c:"#4dd0e1",dot:"#4dd0e1"},Materials:{bg:"rgba(206,147,216,0.13)",c:"#ce93d8",dot:"#ce93d8"},Transport:{bg:"rgba(255,241,118,0.13)",c:"#fff176",dot:"#fff176"},Other:{bg:"rgba(100,181,246,0.13)",c:"#64b5f6",dot:"#64b5f6"}};
+
+const fmt=n=>"AED "+Number(n||0).toLocaleString("en-AE",{minimumFractionDigits:2,maximumFractionDigits:2});
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2);
+const today=()=>new Date().toISOString().slice(0,10);
+
+// ── ANIMATED NUMBER ───────────────────────────────────────────────────────────
+function AnimNum({value,color}){
+  const [disp,setDisp]=useState(0);
+  const ref=useRef(null);
+  useEffect(()=>{
+    const start=disp,end=value,dur=600,s=performance.now();
+    const tick=()=>{const p=Math.min((performance.now()-s)/dur,1);const ease=1-Math.pow(1-p,3);setDisp(start+(end-start)*ease);if(p<1)ref.current=requestAnimationFrame(tick);};
+    ref.current=requestAnimationFrame(tick);
+    return()=>cancelAnimationFrame(ref.current);
+  },[value]);
+  return <span style={{color,fontVariantNumeric:"tabular-nums"}}>{fmt(disp)}</span>;
+}
+
+// ── TOAST ────────────────────────────────────────────────────────────────────
+function Toast({msg}){
+  const [show,setShow]=useState(false);
+  useEffect(()=>{if(msg){setShow(true);const t=setTimeout(()=>setShow(false),2200);return()=>clearTimeout(t);};},[msg]);
+  return <div className={"toast"+(show?" show":"")}>{msg}</div>;
+}
+
+// ── BADGE ────────────────────────────────────────────────────────────────────
+function Badge({type}){
+  const s=TC[type]||TC.Other;
+  return <span className="badge" style={{background:s.bg,color:s.c}}>
+    <span style={{width:5,height:5,borderRadius:"50%",background:s.dot,display:"inline-block",flexShrink:0}}/>
+    {type}
+  </span>;
+}
+
+// ── STAT CARD ────────────────────────────────────────────────────────────────
+function Stat({label,value,color,sub}){
+  return <div className="stat">
+    <div className="stat-top" style={{background:`linear-gradient(90deg,transparent,${color}66,transparent)`}}/>
+    <div className="stat-label">{label}</div>
+    <div className="stat-val" style={{color}}><AnimNum value={value} color={color}/></div>
+    {sub&&<div className="stat-sub">{sub}</div>}
+  </div>;
+}
+
+// ── RIPPLE BUTTON ────────────────────────────────────────────────────────────
+function RippleBtn({className,onClick,children,style,disabled}){
+  const ref=useRef();
+  function handleClick(e){
+    if(disabled)return;
+    const b=ref.current.getBoundingClientRect();
+    const r=document.createElement("span");
+    r.style.cssText=`position:absolute;border-radius:50%;background:rgba(255,255,255,0.25);width:60px;height:60px;margin-top:-30px;margin-left:-30px;left:${e.clientX-b.left}px;top:${e.clientY-b.top}px;animation:ripple 0.5s ease;pointer-events:none`;
+    ref.current.appendChild(r);
+    setTimeout(()=>r.remove(),500);
+    if(onClick)onClick(e);
+  }
+  return <button ref={ref} className={className} onClick={handleClick} style={{...style,position:"relative",overflow:"hidden",opacity:disabled?0.5:1}} disabled={disabled}>{children}</button>;
+}
+
+// ── LOGIN ────────────────────────────────────────────────────────────────────
+function Login({onLogin}){
+  const [u,setU]=useState("");const [p,setP]=useState("");const [err,setErr]=useState("");const [show,setShow]=useState(false);const [loading,setLoading]=useState(false);const [focused,setFocused]=useState("");
+
+  async function go(){
+    if(loading)return;setLoading(true);
+    await new Promise(r=>setTimeout(r,700));
+    const user=USERS.find(x=>x.username.toLowerCase()===u.trim().toLowerCase()&&x.password===p.trim());
+    if(user)onLogin(user); else{setErr("Invalid username or password");setP("");}
+    setLoading(false);
+  }
+
+  return <div style={{minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center",padding:20}}>
+    <div style={{width:"100%",maxWidth:400,animation:"fadeUp 0.6s cubic-bezier(0.16,1,0.3,1)"}}>
+
+      {/* Logo area */}
+      <div style={{textAlign:"center",marginBottom:44}}>
+        <div style={{width:72,height:72,background:"linear-gradient(135deg,#00c853,#00e676)",borderRadius:22,display:"inline-flex",alignItems:"center",justifyContent:"center",fontSize:32,marginBottom:22,boxShadow:"0 12px 40px rgba(0,200,83,0.4)",animation:"float 3s ease-in-out infinite"}}>
+          ◈
+        </div>
+        <h1 style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:26,fontWeight:700,color:"#f0fdf0",marginBottom:8,letterSpacing:"-0.02em"}}>
+          Contract Accountant
+          <span style={{display:"inline-block",marginLeft:8,fontSize:10,fontWeight:700,background:"linear-gradient(135deg,#00c853,#00e676)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",letterSpacing:"0.06em",verticalAlign:"middle",padding:"2px 6px",border:"1px solid rgba(0,230,118,0.3)",borderRadius:6}}>PRO</span>
+        </h1>
+        <p style={{fontSize:13,color:"#4a7a4a",fontWeight:400}}>Sign in to your workspace</p>
+      </div>
+
+      {/* Card */}
+      <div style={{background:"rgba(15,21,16,0.8)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:24,padding:"36px 32px",backdropFilter:"blur(24px)",boxShadow:"0 40px 100px rgba(0,0,0,0.6)"}}>
+        <div style={{marginBottom:18}}>
+          <label className="lbl">Username <span className="req">*</span></label>
+          <input className={"inp"+(err?" error":"")} value={u}
+            onChange={e=>{setU(e.target.value);setErr("");}}
+            onFocus={()=>setFocused("u")} onBlur={()=>setFocused("")}
+            onKeyDown={e=>e.key==="Enter"&&go()} placeholder="Your username" autoCapitalize="none"
+            style={{borderColor:focused==="u"?"var(--g)":""}}/>
+        </div>
+        <div style={{marginBottom:28}}>
+          <label className="lbl">Password <span className="req">*</span></label>
+          <div style={{position:"relative"}}>
+            <input className={"inp"+(err?" error":"")} type={show?"text":"password"} value={p}
+              onChange={e=>{setP(e.target.value);setErr("");}}
+              onFocus={()=>setFocused("p")} onBlur={()=>setFocused("")}
+              onKeyDown={e=>e.key==="Enter"&&go()} placeholder="Your password"
+              style={{paddingRight:48,borderColor:focused==="p"?"var(--g)":""}}/>
+            <button onClick={()=>setShow(v=>!v)} style={{position:"absolute",right:14,top:"50%",transform:"translateY(-50%)",background:"none",border:"none",color:"#4a7a4a",fontSize:15,cursor:"pointer",padding:4,transition:"color 0.2s"}}
+              onMouseEnter={e=>e.target.style.color="#00e676"} onMouseLeave={e=>e.target.style.color="#4a7a4a"}>
+              {show?"◎":"○"}
+            </button>
+          </div>
+        </div>
+
+        {err&&<div style={{background:"rgba(255,68,68,0.08)",border:"1px solid rgba(255,68,68,0.2)",borderRadius:10,padding:"10px 14px",fontSize:12,color:"#ff6b6b",marginBottom:18,textAlign:"center",animation:"fadeIn 0.2s ease",display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>
+          ⚠ {err}
+        </div>}
+
+        <RippleBtn className="btn-p" onClick={go} disabled={loading} style={{width:"100%",padding:"14px",fontSize:14,borderRadius:14,display:"flex",alignItems:"center",justifyContent:"center",gap:10}}>
+          {loading
+            ? <><span style={{width:16,height:16,border:"2px solid rgba(0,20,8,0.3)",borderTop:"2px solid #001a08",borderRadius:"50%",animation:"spin 0.6s linear infinite",display:"inline-block"}}/> Signing in...</>
+            : "Sign In →"}
+        </RippleBtn>
+
+        <div style={{textAlign:"center",marginTop:20,fontSize:11,color:"#2d4a2d",letterSpacing:"0.05em"}}>
+          SECURED · CLOUD SYNCED · MULTI-DEVICE
+        </div>
+      </div>
+    </div>
+  </div>;
+}
+
+// ── APP SHELL ────────────────────────────────────────────────────────────────
+function App(){
+  const [user,setUser]=useState(()=>{try{return JSON.parse(sessionStorage.getItem("cap_user")||"null");}catch{return null;}});
+  function handleLogin(u){sessionStorage.setItem("cap_user",JSON.stringify(u));setUser(u);}
+  function handleLogout(){sessionStorage.removeItem("cap_user");setUser(null);}
+  if(!user)return <Login onLogin={handleLogin}/>;
+  return <AppMain user={user} onLogout={handleLogout}/>;
+}
+
+// ── MAIN APP ─────────────────────────────────────────────────────────────────
+function AppMain({user,onLogout}){
+  const ro=user.role==="readonly";
+  const [contracts,setContracts]=useState(DEFAULTS);
+  const [page,setPage]=useState("home");
+  const [activeId,setActiveId]=useState(null);
+  const [modal,setModal]=useState(null); // null | "new-contract" | "edit-contract" | "new-item"
+  const [form,setForm]=useState({});
+  const [errors,setErrors]=useState({});
+  const [aiText,setAiText]=useState("");
+  const [aiLoad,setAiLoad]=useState(false);
+  const [delId,setDelId]=useState(null);
+  const [sync,setSync]=useState("loading");
+  const [toast,setToast]=useState("");
+  const [hovCard,setHovCard]=useState(null);
+
+  const active=contracts.find(c=>c.id===activeId);
+
+  function showToast(msg){setToast(msg);setTimeout(()=>setToast(""),2500);}
+
+  useEffect(()=>{
+    setSync("loading");
+    cloudRead().then(d=>{if(d)setContracts(mergeDefaults(d));setSync("ok");})
+      .catch(()=>{setSync("error");try{const l=JSON.parse(localStorage.getItem("cap_v1")||"null");if(l)setContracts(mergeDefaults(l));}catch{}});
+  },[]);
+
+  function save(upd,msg){
+    setContracts(upd);localStorage.setItem("cap_v1",JSON.stringify(upd));
+    setSync("saving");
+    cloudWrite(upd).then(()=>{setSync("ok");if(msg)showToast(msg);}).catch(()=>setSync("error"));
+  }
+
+  function openC(id){setActiveId(id);setPage("detail");setAiText("");}
+
+  function openModal(m,data={}){setModal(m);setForm({...data});setErrors({});}
+  function closeModal(){setModal(null);setForm({});setErrors({});}
+
+  function validate(fields){
+    const e={};
+    fields.forEach(f=>{if(!form[f]||String(form[f]).trim()==="")e[f]=true;});
+    setErrors(e);return Object.keys(e).length===0;
+  }
+
+  function saveContract(){
+    if(!validate(["name"]))return;
+    let upd;
+    if(form.id){upd=contracts.map(c=>c.id===form.id?{...c,...form,value:parseFloat(form.value)||0}:c);}
+    else{const c={id:uid(),items:[],...form,value:parseFloat(form.value)||0};upd=[...contracts,c];setActiveId(c.id);setPage("detail");}
+    save(upd,form.id?"Contract updated ✓":"Contract created ✓");closeModal();
+  }
+
+  function saveItem(){
+    if(!validate(["type","date","desc","amount"]))return;
+    const item={id:uid(),type:form.type,desc:form.desc,amount:parseFloat(form.amount),date:form.date,note:form.note||""};
+    save(contracts.map(c=>c.id===activeId?{...c,items:[...c.items,item]}:c),"Entry added ✓");closeModal();
+  }
+
+  function delItem(iid){save(contracts.map(c=>c.id===activeId?{...c,items:c.items.filter(i=>i.id!==iid)}:c),"Entry deleted");}
+
+  function delContract(id){
+    save(contracts.filter(c=>c.id!==id),"Contract deleted");
+    setPage("home");setActiveId(null);setDelId(null);
+  }
+
+  function exportB(){
+    const b=new Blob([JSON.stringify(contracts,null,2)],{type:"application/json"});
+    const a=document.createElement("a");a.href=URL.createObjectURL(b);
+    a.download="contracts-backup-"+today()+".json";a.click();showToast("Backup exported ✓");
+  }
+  function importB(e){
+    const f=e.target.files[0];if(!f)return;
+    const r=new FileReader();
+    r.onload=ev=>{try{const p=JSON.parse(ev.target.result);if(!Array.isArray(p)){alert("Invalid file");return;}if(confirm("Restore this backup? This replaces all data."))save(p,"Backup restored ✓");}catch{alert("Error reading file");}};
+    r.readAsText(f);e.target.value="";
+  }
+
+  async function genAI(){
+    if(!active)return;setAiLoad(true);setAiText("");
+    const rev=active.items.filter(i=>i.type==="Revenue").reduce((s,i)=>s+i.amount,0);
+    const exp=active.items.filter(i=>i.type==="Expense").reduce((s,i)=>s+i.amount,0);
+    const sal=active.items.filter(i=>i.type==="Salary").reduce((s,i)=>s+i.amount,0);
+    const oth=active.items.filter(i=>!["Revenue","Expense","Salary"].includes(i.type)).reduce((s,i)=>s+i.amount,0);
+    const net=active.value+rev-exp-sal-oth;
+    try{
+      const res=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:1000,
+          messages:[{role:"user",content:"Professional accountant. 3 paragraphs: Financial Health, Key Risks, Recommendations. Be concise.\n\nContract: "+active.name+"\nClient: "+(active.client||"N/A")+"\nValue: AED "+active.value+"\nRevenue: AED "+rev+"\nExpenses: AED "+exp+"\nSalaries: AED "+sal+"\nOther costs: AED "+oth+"\nNet: AED "+net+"\nEntries: "+(active.items.map(i=>"["+i.type+"] "+i.desc+": AED "+i.amount).join(", ")||"None")}]})});
+      const d=await res.json();setAiText(d.content?.[0]?.text||"No response.");
+    }catch{setAiText("Unable to connect to AI.");}
+    setAiLoad(false);
+  }
+
+  // Computed
+  const rev=active?.items.filter(i=>i.type==="Revenue").reduce((s,i)=>s+i.amount,0)||0;
+  const exp=active?.items.filter(i=>i.type==="Expense").reduce((s,i)=>s+i.amount,0)||0;
+  const sal=active?.items.filter(i=>i.type==="Salary").reduce((s,i)=>s+i.amount,0)||0;
+  const oth=active?.items.filter(i=>!["Revenue","Expense","Salary"].includes(i.type)).reduce((s,i)=>s+i.amount,0)||0;
+  const net=(active?.value||0)+rev-exp-sal-oth;
+  const margin=active?.value>0?((net/active.value)*100).toFixed(1):"0";
+  const totalPortfolio=contracts.reduce((s,c)=>s+c.value,0);
+  const totalNet=contracts.reduce((c,ct)=>{
+    const r=ct.items.filter(i=>i.type==="Revenue").reduce((s,i)=>s+i.amount,0);
+    const e=ct.items.filter(i=>i.type!=="Revenue").reduce((s,i)=>s+i.amount,0);
+    return c+ct.value+r-e;
+  },0);
+
+  const syncEl=<div style={{display:"flex",alignItems:"center",gap:7,fontSize:11,color:sync==="error"?"#ff6b6b":sync==="ok"?"#66bb6a":"#ffa726",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.07)",borderRadius:20,padding:"5px 12px",whiteSpace:"nowrap"}}>
+    <span className="sync-dot" style={{background:sync==="error"?"#ff4444":sync==="ok"?"#00e676":"#ffa726"}}/>
+    {sync==="loading"?"Syncing...":sync==="saving"?"Saving...":sync==="ok"?"Live":"Offline"}
+  </div>;
+
+  // ── MODAL ──────────────────────────────────────────────────────────────────
+  const ModalContent=()=>{
+    if(!modal)return null;
+
+    if(modal==="new-contract"||modal==="edit-contract"){
+      return <div className="panel" style={{background:"#0c110d",border:"1px solid rgba(255,255,255,0.09)",borderRadius:24,padding:"32px",width:"100%",maxWidth:560,maxHeight:"90vh",overflowY:"auto"}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:28}}>
+          <h2 style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:22,fontWeight:700,color:"#f0fdf0",letterSpacing:"-0.02em"}}>{modal==="edit-contract"?"Edit Contract":"New Contract"}</h2>
+          <button onClick={closeModal} style={{background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:8,width:32,height:32,display:"flex",alignItems:"center",justifyContent:"center",color:"#4a7a4a",fontSize:16,cursor:"pointer",transition:"all 0.2s"}}
+            onMouseEnter={e=>e.currentTarget.style.color="#f0fdf0"} onMouseLeave={e=>e.currentTarget.style.color="#4a7a4a"}>✕</button>
+        </div>
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16}} className="form-2col">
+          <div style={{gridColumn:"span 2"}} className="s2">
+            <label className="lbl">Contract Name <span className="req">*</span></label>
+            <input className={"inp"+(errors.name?" error":"")} value={form.name||""} onChange={e=>setForm({...form,name:e.target.value})} placeholder="e.g. Al Mireef Villa Project"/>
+          </div>
+          <div style={{gridColumn:"span 2"}} className="s2">
+            <label className="lbl">Client / Owner</label>
+            <input className="inp" value={form.client||""} onChange={e=>setForm({...form,client:e.target.value})} placeholder="Full client name"/>
+          </div>
+          <div>
+            <label className="lbl">Contract Value (AED) <span className="req">*</span></label>
+            <input type="number" className={"inp"+(errors.value?" error":"")} value={form.value||""} onChange={e=>setForm({...form,value:e.target.value})} placeholder="0.00"/>
+          </div>
+          <div>
+            <label className="lbl">Start Date</label>
+            <input type="date" className="inp" value={form.startDate||""} onChange={e=>setForm({...form,startDate:e.target.value})}/>
+          </div>
+          <div style={{gridColumn:"span 2"}} className="s2">
+            <label className="lbl">Notes & Details</label>
+            <textarea className="inp" style={{minHeight:84,resize:"vertical",lineHeight:1.6}} value={form.notes||""} onChange={e=>setForm({...form,notes:e.target.value})} placeholder="Location, retention terms, payment conditions..."/>
+          </div>
+        </div>
+        <div style={{display:"flex",gap:10,marginTop:24}}>
+          <RippleBtn className="btn-p" onClick={saveContract} style={{flex:1,padding:"13px"}}>{modal==="edit-contract"?"Save Changes":"Create Contract"}</RippleBtn>
+          <button className="btn-g" onClick={closeModal} style={{padding:"13px 20px"}}>Cancel</button>
+        </div>
+      </div>;
+    }
+
+    if(modal==="new-item"){
+      return <div className="panel" style={{background:"#0c110d",border:"1px solid rgba(255,255,255,0.09)",borderRadius:24,padding:"32px",width:"100%",maxWidth:540,maxHeight:"90vh",overflowY:"auto"}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
+          <h2 style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:22,fontWeight:700,color:"#f0fdf0",letterSpacing:"-0.02em"}}>Add Entry</h2>
+          <button onClick={closeModal} style={{background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:8,width:32,height:32,display:"flex",alignItems:"center",justifyContent:"center",color:"#4a7a4a",fontSize:16,cursor:"pointer",transition:"all 0.2s"}}
+            onMouseEnter={e=>e.currentTarget.style.color="#f0fdf0"} onMouseLeave={e=>e.currentTarget.style.color="#4a7a4a"}>✕</button>
+        </div>
+        <div style={{fontSize:12,color:"#4a7a4a",marginBottom:24}}>{active?.name}</div>
+
+        {/* Type grid */}
+        <div style={{marginBottom:20}}>
+          <label className="lbl">Entry Type <span className="req">*</span></label>
+          {errors.type&&<div style={{fontSize:11,color:"var(--red)",marginBottom:6}}>Please select a type</div>}
+          <div className="type-grid" style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:8}}>
+            {TYPES.map(t=>{
+              const s=TC[t]||TC.Other;const sel=form.type===t;
+              return <button key={t} className={"type-btn"+(sel?" active":"")} onClick={()=>setForm({...form,type:t})}
+                style={{borderColor:sel?s.c+"66":"rgba(255,255,255,0.07)",background:sel?s.bg:"transparent",color:sel?s.c:"#4a7a4a",boxShadow:sel?`0 0 16px ${s.c}22`:"none"}}>
+                {t}
+              </button>;
+            })}
+          </div>
+        </div>
+
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14,marginBottom:14}} className="form-2col">
+          <div>
+            <label className="lbl">Amount (AED) <span className="req">*</span></label>
+            <input type="number" className={"inp"+(errors.amount?" error":"")} value={form.amount||""} onChange={e=>setForm({...form,amount:e.target.value})} placeholder="0.00"/>
+          </div>
+          <div>
+            <label className="lbl">Date <span className="req">*</span></label>
+            <input type="date" className={"inp"+(errors.date?" error":"")} value={form.date||today()} onChange={e=>setForm({...form,date:e.target.value})}/>
+          </div>
+        </div>
+        <div style={{marginBottom:14}}>
+          <label className="lbl">Description <span className="req">*</span></label>
+          <input className={"inp"+(errors.desc?" error":"")} value={form.desc||""} onChange={e=>setForm({...form,desc:e.target.value})} placeholder="e.g. Concrete supply, Site engineer salary..."/>
+        </div>
+        <div style={{marginBottom:24}}>
+          <label className="lbl">Note (optional)</label>
+          <input className="inp" value={form.note||""} onChange={e=>setForm({...form,note:e.target.value})} placeholder="Any additional details..."/>
+        </div>
+        <div style={{display:"flex",gap:10}}>
+          <RippleBtn className="btn-p" onClick={saveItem} style={{flex:1,padding:"13px"}}>Save Entry</RippleBtn>
+          <button className="btn-g" onClick={closeModal} style={{padding:"13px 20px"}}>Cancel</button>
+        </div>
+      </div>;
+    }
+
+    if(modal==="delete-confirm"){
+      return <div className="panel" style={{background:"#0c0808",border:"1px solid rgba(255,68,68,0.2)",borderRadius:20,padding:"32px",width:"100%",maxWidth:420,textAlign:"center"}}>
+        <div style={{fontSize:40,marginBottom:16}}>⚠</div>
+        <h3 style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:18,fontWeight:700,color:"#f0fdf0",marginBottom:8}}>Delete Contract?</h3>
+        <p style={{fontSize:13,color:"#7a5a5a",marginBottom:28,lineHeight:1.6}}>"{active?.name}" and all its entries will be permanently deleted. This cannot be undone.</p>
+        <div style={{display:"flex",gap:10,justifyContent:"center"}}>
+          <button style={{background:"rgba(255,68,68,0.15)",border:"1px solid rgba(255,68,68,0.3)",borderRadius:12,padding:"11px 24px",color:"#ff6b6b",fontWeight:700,fontSize:13,cursor:"pointer",transition:"all 0.2s"}}
+            onClick={()=>delContract(active.id)}>Yes, Delete</button>
+          <button className="btn-g" onClick={closeModal} style={{padding:"11px 24px"}}>Cancel</button>
+        </div>
+      </div>;
+    }
+    return null;
+  };
+
+  return <div style={{minHeight:"100vh"}}>
+    <Toast msg={toast}/>
+
+    {/* MODAL */}
+    {modal&&<div className="overlay" onClick={e=>{if(e.target===e.currentTarget)closeModal();}}>
+      <ModalContent/>
+    </div>}
+
+    {/* NAV */}
+    <nav className="nav">
+      <div style={{display:"flex",alignItems:"center",gap:12,cursor:"pointer"}} onClick={()=>{setPage("home");setActiveId(null);}}>
+        <div style={{width:38,height:38,background:"linear-gradient(135deg,#00c853,#00e676)",borderRadius:11,display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,boxShadow:"0 4px 16px rgba(0,200,83,0.35)",flexShrink:0}}>◈</div>
+        <div>
+          <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:14,fontWeight:700,color:"#f0fdf0",letterSpacing:"-0.01em",lineHeight:1.2}}>
+            Contract Accountant
+            <span style={{marginLeft:6,fontSize:9,fontWeight:700,background:"linear-gradient(135deg,#00c853,#00e676)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",letterSpacing:"0.06em"}}>PRO</span>
+          </div>
+          <div className="hide-mob" style={{fontSize:10,color:"#2d4a2d"}}>Multi-Contract Financial Tracker</div>
+        </div>
+      </div>
+
+      <div style={{display:"flex",gap:8,alignItems:"center"}}>
+        {syncEl}
+        {page==="detail"&&active&&<>
+          {!ro&&<button className="btn-g hide-mob" onClick={()=>openModal("edit-contract",{...active})}>Edit</button>}
+          {!ro&&<RippleBtn className="btn-p" onClick={()=>openModal("new-item",{date:today()})}>+ Entry</RippleBtn>}
+        </>}
+        {page==="home"&&!ro&&<RippleBtn className="btn-p" onClick={()=>openModal("new-contract")}>+ New Contract</RippleBtn>}
+        {page==="detail"&&<button className="btn-g" onClick={()=>{setPage("home");setActiveId(null);}}>← Back</button>}
+        <div style={{width:1,height:22,background:"rgba(255,255,255,0.07)"}} className="hide-mob"/>
+        <div className="hide-mob" style={{display:"flex",alignItems:"center",gap:7}}>
+          <div style={{width:24,height:24,background:"rgba(0,230,118,0.12)",border:"1px solid rgba(0,230,118,0.25)",borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",fontSize:10,color:"#00e676",fontWeight:700}}>
+            {user.username[0]}
+          </div>
+          <span style={{fontSize:12,color:"#4a7a4a",fontWeight:500}}>{user.username}</span>
+          {ro&&<span style={{fontSize:9,color:"#ffa726",background:"rgba(255,167,38,0.1)",border:"1px solid rgba(255,167,38,0.2)",borderRadius:8,padding:"2px 7px",fontWeight:700}}>VIEW</span>}
+        </div>
+        <button className="btn-sm" onClick={onLogout} title="Sign out" style={{padding:"7px 12px",fontSize:12}}>⏻</button>
+      </div>
+    </nav>
+
+    {/* BODY */}
+    <div className="wrap" style={{maxWidth:980,margin:"0 auto",padding:"28px 24px"}}>
+
+      {/* ── HOME ── */}
+      {page==="home"&&<div key="home" style={{animation:"fadeUp 0.5s cubic-bezier(0.16,1,0.3,1)"}}>
+
+        {/* Portfolio Hero */}
+        <div style={{background:"linear-gradient(135deg,rgba(0,200,83,0.08),rgba(0,100,50,0.04))",border:"1px solid rgba(0,230,118,0.12)",borderRadius:24,padding:"28px 32px",marginBottom:24,position:"relative",overflow:"hidden"}}>
+          <div style={{position:"absolute",top:-40,right:-40,width:200,height:200,background:"radial-gradient(circle,rgba(0,230,118,0.08),transparent 70%)",pointerEvents:"none"}}/>
+          <div style={{position:"absolute",top:0,left:0,right:0,height:1,background:"linear-gradient(90deg,transparent,rgba(0,230,118,0.4),transparent)"}}/>
+          <div style={{fontSize:10,color:"#4a7a4a",textTransform:"uppercase",letterSpacing:"0.12em",marginBottom:10,fontWeight:600}}>Portfolio Overview</div>
+          <h1 style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:32,fontWeight:700,color:"#f0fdf0",marginBottom:16,letterSpacing:"-0.02em",lineHeight:1.1}}>
+            Your <span style={{background:"linear-gradient(135deg,#00e676,#69f0ae)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent"}}>Contracts</span>
+          </h1>
+          <div style={{display:"flex",gap:28,flexWrap:"wrap"}}>
+            <div>
+              <div style={{fontSize:10,color:"#4a7a4a",textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:4,fontWeight:600}}>Total Value</div>
+              <div style={{fontSize:22,fontWeight:700,color:"#a5d6a7",fontVariantNumeric:"tabular-nums",letterSpacing:"-0.01em"}}><AnimNum value={totalPortfolio} color="#a5d6a7"/></div>
+            </div>
+            <div>
+              <div style={{fontSize:10,color:"#4a7a4a",textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:4,fontWeight:600}}>Net Balance</div>
+              <div style={{fontSize:22,fontWeight:700,fontVariantNumeric:"tabular-nums",letterSpacing:"-0.01em"}}><AnimNum value={totalNet} color={totalNet>=0?"#00e676":"#ff4444"}/></div>
+            </div>
+            <div>
+              <div style={{fontSize:10,color:"#4a7a4a",textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:4,fontWeight:600}}>Contracts</div>
+              <div style={{fontSize:22,fontWeight:700,color:"#64b5f6"}}>{contracts.length}</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Backup */}
+        <div style={{display:"flex",gap:8,marginBottom:22,flexWrap:"wrap"}}>
+          <button className="btn-sm" onClick={exportB}>↓ Export Backup</button>
+          {!ro&&<label className="btn-sm" style={{cursor:"pointer",display:"inline-flex",alignItems:"center"}}>↑ Import Backup<input type="file" accept=".json" style={{display:"none"}} onChange={importB}/></label>}
+        </div>
+
+        {/* Cards Grid */}
+        <div className="cards-grid" style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(268px,1fr))",gap:14}}>
+          {contracts.map((c,i)=>{
+            const cR=c.items.filter(x=>x.type==="Revenue").reduce((s,x)=>s+x.amount,0);
+            const cE=c.items.filter(x=>x.type!=="Revenue").reduce((s,x)=>s+x.amount,0);
+            const cN=c.value+cR-cE;
+            const spent=c.value>0?Math.min(100,(cE/c.value)*100):0;
+            const isHov=hovCard===c.id;
+            return <div key={c.id} className="icard" onClick={()=>openC(c.id)}
+              onMouseEnter={()=>setHovCard(c.id)} onMouseLeave={()=>setHovCard(null)}
+              style={{padding:"22px 22px 18px",cursor:"pointer",animation:`cardReveal 0.5s cubic-bezier(0.16,1,0.3,1) ${i*0.07}s both`}}>
+
+              {/* Top shimmer line */}
+              <div style={{position:"absolute",top:0,left:0,right:0,height:1,background:isHov?"linear-gradient(90deg,transparent,rgba(0,230,118,0.5),transparent)":"linear-gradient(90deg,transparent,rgba(0,230,118,0.15),transparent)",transition:"all 0.3s"}}/>
+
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:14}}>
+                <div style={{flex:1,marginRight:10}}>
+                  <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:15,fontWeight:600,color:"#e8f5e8",marginBottom:4,letterSpacing:"-0.01em"}}>{c.name}</div>
+                  <div style={{fontSize:11,color:"#4a7a4a",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",maxWidth:190}}>{c.client||"No client"}</div>
+                </div>
+                <span style={{fontSize:10,color:"#5a8a5a",background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.09)",borderRadius:8,padding:"3px 8px",whiteSpace:"nowrap",fontWeight:600,flexShrink:0}}>
+                  {c.items.length} entries
+                </span>
+              </div>
+
+              {/* Progress bar */}
+              <div className="prog-bg">
+                <div className="prog-fill" style={{width:spent+"%",background:spent>80?"linear-gradient(90deg,#ffa726,#ff4444)":spent>50?"linear-gradient(90deg,#00c853,#ffa726)":"linear-gradient(90deg,#00c853,#00e676)"}}/>
+              </div>
+
+              <div style={{display:"flex",justifyContent:"space-between"}}>
+                <div>
+                  <div style={{fontSize:9,color:"#3a6a3a",textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:4,fontWeight:600}}>Value</div>
+                  <div style={{fontSize:14,fontWeight:600,color:"#88bb88",fontVariantNumeric:"tabular-nums"}}>{fmt(c.value)}</div>
+                </div>
+                <div style={{textAlign:"right"}}>
+                  <div style={{fontSize:9,color:"#3a6a3a",textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:4,fontWeight:600}}>Net</div>
+                  <div style={{fontSize:15,fontWeight:700,color:cN>=0?"#4ade80":"#f87171",fontVariantNumeric:"tabular-nums"}}>{cN>=0?"+":""}{fmt(cN)}</div>
+                </div>
+              </div>
+              {c.startDate&&<div style={{marginTop:12,fontSize:10,color:"#3a6a3a",borderTop:"1px solid rgba(255,255,255,0.05)",paddingTop:10}}>Started {c.startDate}</div>}
+            </div>;
+          })}
+
+          {/* Add new card */}
+          {!ro&&<div className="icard" onClick={()=>openModal("new-contract")}
+            style={{cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",minHeight:175,border:"1px dashed rgba(0,230,118,0.15)",background:"transparent",animation:`cardReveal 0.5s cubic-bezier(0.16,1,0.3,1) ${contracts.length*0.07}s both`}}>
+            <div style={{width:44,height:44,border:"1.5px dashed rgba(0,230,118,0.25)",borderRadius:14,display:"flex",alignItems:"center",justifyContent:"center",fontSize:22,color:"rgba(0,230,118,0.35)",marginBottom:10,transition:"all 0.3s"}}>+</div>
+            <div style={{fontSize:12,fontWeight:600,color:"#3a6a3a"}}>New Contract</div>
+          </div>}
+        </div>
+      </div>}
+
+      {/* ── DETAIL ── */}
+      {page==="detail"&&active&&<div key="detail" style={{animation:"fadeUp 0.4s cubic-bezier(0.16,1,0.3,1)"}}>
+
+        {/* Breadcrumb */}
+        <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:22,fontSize:12}}>
+          <span style={{cursor:"pointer",color:"#5a8a5a",fontWeight:500,transition:"color 0.15s"}}
+            onMouseEnter={e=>e.target.style.color="#00e676"} onMouseLeave={e=>e.target.style.color="#5a8a5a"}
+            onClick={()=>{setPage("home");setActiveId(null);}}>← Contracts</span>
+          <span style={{color:"#2d4a2d"}}>›</span>
+          <span style={{color:"#a5d6a7",fontWeight:600}}>{active.name}</span>
+        </div>
+
+        {/* Header */}
+        <div style={{background:"rgba(15,21,16,0.8)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:20,padding:"24px 28px",marginBottom:14,position:"relative",overflow:"hidden"}}>
+          <div style={{position:"absolute",top:0,left:0,right:0,height:1,background:"linear-gradient(90deg,transparent,rgba(0,230,118,0.35),transparent)"}}/>
+          <div style={{position:"absolute",top:-50,right:-50,width:160,height:160,background:"radial-gradient(circle,rgba(0,200,83,0.06),transparent 70%)",pointerEvents:"none"}}/>
+          <div style={{fontSize:10,color:"#5a8a5a",textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:8,fontWeight:600}}>{active.client}{active.startDate?" · "+active.startDate:""}</div>
+          <h2 style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:24,fontWeight:700,color:"#f0fdf0",letterSpacing:"-0.02em",marginBottom:active.notes?10:0}}>{active.name}</h2>
+          {active.notes&&<p style={{color:"#6a9a6a",fontSize:13,lineHeight:1.7,maxWidth:600}}>{active.notes}</p>}
+          {!ro&&<button className="btn-sm" style={{marginTop:14}} onClick={()=>openModal("edit-contract",{...active})}>✎ Edit Contract</button>}
+        </div>
+
+        {/* Stats */}
+        <div className="stats-grid" style={{display:"flex",gap:10,marginBottom:14,flexWrap:"wrap"}}>
+          <Stat label="Contract Value" value={active.value} color="#88bb88"/>
+          <Stat label="Revenue +" value={rev} color="#00e676"/>
+          <Stat label="Expenses −" value={exp} color="#ff5555"/>
+          <Stat label="Salaries −" value={sal} color="#ffa726"/>
+          <Stat label="Net Balance" value={net} color={net>=0?"#4ade80":"#f87171"} sub={"Margin "+margin+"%"}/>
+        </div>
+
+        {/* Entries */}
+        <div style={{background:"rgba(15,21,16,0.8)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:20,padding:"22px 24px",marginBottom:14}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:18}}>
+            <h3 style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:15,fontWeight:600,color:"#c8e6c9"}}>
+              Entries <span style={{fontSize:12,color:"#5a8a5a",fontWeight:400}}>({active.items.length})</span>
+            </h3>
+            {!ro&&<RippleBtn className="btn-p" style={{fontSize:12,padding:"9px 16px"}} onClick={()=>openModal("new-item",{date:today()})}>+ Add Entry</RippleBtn>}
+          </div>
+
+          {active.items.length===0
+            ? <div style={{textAlign:"center",padding:"48px 0",color:"#2d4a2d"}}>
+                <div style={{fontSize:36,marginBottom:12,opacity:0.5}}>◫</div>
+                <div style={{fontSize:13,fontWeight:600,color:"#5a8a5a",marginBottom:4}}>No entries yet</div>
+                <div style={{fontSize:12}}>Add revenues, expenses or salaries</div>
+              </div>
+            : <div style={{overflowX:"auto"}}>
+                <table>
+                  <thead>
+                    <tr style={{borderBottom:"1px solid rgba(255,255,255,0.06)"}}>
+                      {["Type","Description","Date","Amount",""].map(h=><th key={h} style={{textAlign:"left",padding:"8px 12px",fontSize:9,color:"#3a6a3a",textTransform:"uppercase",letterSpacing:"0.12em",fontWeight:700,whiteSpace:"nowrap"}}>{h}</th>)}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {active.items.map((item,i)=><tr key={item.id} className="trow" style={{animation:`slideRight 0.3s ease ${i*0.04}s both`}}>
+                      <td style={{padding:"12px 12px"}}><Badge type={item.type}/></td>
+                      <td style={{padding:"12px 12px"}}>
+                        <div style={{fontSize:13,color:"#d4edda",fontWeight:500}}>{item.desc}</div>
+                        {item.note&&<div style={{fontSize:11,color:"#4a7a4a",marginTop:2}}>{item.note}</div>}
+                      </td>
+                      <td style={{padding:"12px 12px",fontSize:12,color:"#6a9a6a",whiteSpace:"nowrap"}}>{item.date||"—"}</td>
+                      <td style={{padding:"12px 12px",fontSize:13,fontWeight:700,color:item.type==="Revenue"?"#4ade80":"#f87171",whiteSpace:"nowrap",fontVariantNumeric:"tabular-nums"}}>
+                        {item.type==="Revenue"?"+":"−"}{fmt(item.amount)}
+                      </td>
+                      <td style={{padding:"12px 8px"}}>
+                        {!ro&&<button onClick={()=>delItem(item.id)} style={{background:"none",border:"none",color:"#2d4a2d",fontSize:15,cursor:"pointer",padding:"4px 8px",borderRadius:6,transition:"color 0.15s"}}
+                          onMouseEnter={e=>e.target.style.color="#ff4444"} onMouseLeave={e=>e.target.style.color="#2d4a2d"}>✕</button>}
+                      </td>
+                    </tr>)}
+                  </tbody>
+                </table>
+              </div>}
+        </div>
+
+        {/* AI Report */}
+        <div style={{background:"rgba(15,21,16,0.8)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:20,padding:"22px 24px",marginBottom:14}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:aiText?18:0}}>
+            <div>
+              <h3 style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:15,fontWeight:600,color:"#c8e6c9",marginBottom:3}}>AI Financial Report</h3>
+              {!aiText&&<p style={{fontSize:12,color:"#4a7a4a"}}>Instant AI-powered analysis of this contract</p>}
+            </div>
+            <RippleBtn className="btn-g" onClick={genAI} disabled={aiLoad}
+              style={{fontSize:12,padding:"9px 16px",display:"flex",alignItems:"center",gap:8,borderColor:"rgba(0,230,118,0.2)",color:"#00e676"}}>
+              {aiLoad?<><span style={{width:12,height:12,border:"2px solid rgba(0,230,118,0.2)",borderTop:"2px solid #00e676",borderRadius:"50%",animation:"spin 0.6s linear infinite",display:"inline-block"}}/> Analyzing...</>:"✦ Generate"}
+            </RippleBtn>
+          </div>
+          {aiText&&<div style={{background:"rgba(0,230,118,0.04)",border:"1px solid rgba(0,230,118,0.12)",borderRadius:14,padding:"18px 20px",fontSize:13,lineHeight:1.9,color:"#b9e6bc",whiteSpace:"pre-wrap",animation:"fadeIn 0.4s ease"}}>{aiText}</div>}
+        </div>
+
+        {/* Backup */}
+        <div style={{background:"rgba(15,21,16,0.8)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:20,padding:"22px 24px",marginBottom:14}}>
+          <h3 style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:15,fontWeight:600,color:"#c8e6c9",marginBottom:4}}>Backup & Restore</h3>
+          <p style={{fontSize:12,color:"#4a7a4a",marginBottom:16,lineHeight:1.6}}>Export all contracts as a JSON backup or restore from a previous file.</p>
+          <div style={{display:"flex",gap:10,flexWrap:"wrap"}}>
+            <button className="btn-sm" onClick={exportB}>↓ Export Backup</button>
+            {!ro&&<label className="btn-sm" style={{cursor:"pointer",display:"inline-flex",alignItems:"center"}}>↑ Import Backup<input type="file" accept=".json" style={{display:"none"}} onChange={importB}/></label>}
+          </div>
+        </div>
+
+        {/* Delete */}
+        {!ro&&<div style={{textAlign:"right",paddingBottom:40}}>
+          <button onClick={()=>openModal("delete-confirm")} style={{background:"none",border:"none",color:"#2d4a2d",fontSize:12,cursor:"pointer",transition:"color 0.15s",padding:"8px 0"}}
+            onMouseEnter={e=>e.target.style.color="#ff4444"} onMouseLeave={e=>e.target.style.color="#2d4a2d"}>
+            ⌫ Delete this contract
+          </button>
+        </div>}
+      </div>}
+    </div>
+  </div>;
+}
+
+// helper (clamp not available inline)
+function clamp(min,mid,max){return Math.min(max,Math.max(min,mid));}
+
+ReactDOM.createRoot(document.getElementById("app")).render(<App/>);
+</script>
+</body>
+</html>
