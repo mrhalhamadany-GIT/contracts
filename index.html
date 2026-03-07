@@ -53,11 +53,17 @@ const JSONBIN_KEY = "$2a$10$v7/jaHHXOOcWJmOaJrcIHOdB7F/57hAwlvwgZ9ZQB.Hhq80tN8MD
 const JSONBIN_URL = "https://api.jsonbin.io/v3/bins";
 const LOCAL_KEY = "cap_contracts_v1";
 const BIN_ID_KEY = "cap_bin_id";
+const FIXED_BIN_ID = "69ab8a46ae596e708f67fd90"; // hardcoded — same bin on all devices
+
+// ── Always use the fixed bin ID — same on every device ───────────────────────
+async function getOrCreateBinId() {
+  return FIXED_BIN_ID;
+}
 
 async function cloudLoad() {
-  const binId = localStorage.getItem(BIN_ID_KEY);
-  if (!binId) return null;
   try {
+    const binId = await getOrCreateBinId();
+    if (!binId) return null;
     const res = await fetch(`${JSONBIN_URL}/${binId}/latest`, {
       headers: { "X-Access-Key": JSONBIN_KEY }
     });
@@ -67,36 +73,18 @@ async function cloudLoad() {
 }
 
 async function cloudSave(contracts) {
-  let binId = localStorage.getItem(BIN_ID_KEY);
   try {
-    if (!binId) {
-      // Create new bin
-      const res = await fetch(JSONBIN_URL, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-Access-Key": JSONBIN_KEY,
-          "X-Bin-Name": "ContractAccountantPRO",
-          "X-Bin-Private": "true"
-        },
-        body: JSON.stringify({ contracts })
-      });
-      const d = await res.json();
-      binId = d.metadata?.id;
-      if (binId) localStorage.setItem(BIN_ID_KEY, binId);
-    } else {
-      // Update existing bin
-      await fetch(`${JSONBIN_URL}/${binId}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          "X-Access-Key": JSONBIN_KEY
-        },
-        body: JSON.stringify({ contracts })
-      });
-    }
-  } catch (e) { console.error("Cloud save failed", e); }
-  // Always save locally as backup
+    const binId = await getOrCreateBinId();
+    if (!binId) return;
+    await fetch(`${JSONBIN_URL}/${binId}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Access-Key": JSONBIN_KEY
+      },
+      body: JSON.stringify({ contracts })
+    });
+  } catch(e) { console.error("Cloud save failed", e); }
   localStorage.setItem(LOCAL_KEY, JSON.stringify(contracts));
 }
 
