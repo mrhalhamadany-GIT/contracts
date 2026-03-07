@@ -209,7 +209,7 @@ function App() {
 
   const active = contracts.find(c => c.id === activeId);
 
-  // Load from cloud on startup
+  // Always load from cloud on every startup — ignore localStorage for initial data
   React.useEffect(() => {
     setSyncStatus("loading");
     cloudLoad().then(cloudData => {
@@ -218,13 +218,18 @@ function App() {
         DEFAULT_CONTRACTS.forEach(def => {
           if (!result.find(c => c.id === def.id)) result = [def, ...result];
         });
+        // Always use cloud data — overwrite local
+        localStorage.setItem(KEY, JSON.stringify(result));
         setContracts(result);
-        saveData(result);
         setSyncStatus("synced");
       } else {
+        // No cloud data yet — use local as fallback
         setSyncStatus("synced");
       }
-    }).catch(() => setSyncStatus("error"));
+    }).catch(() => {
+      // Cloud failed — use local as fallback
+      setSyncStatus("error");
+    });
   }, []);
 
   function update(updated) {
