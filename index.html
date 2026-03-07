@@ -1113,21 +1113,40 @@ function AppMain({user,onLogout}){
     setAuditLog(prev=>{const upd=[entry,...prev];localStorage.setItem("cap_audit_v1",JSON.stringify(upd));return upd;});
   }
 
+  // Re-attach locally stored PDFs (not synced to cloud — too large)
+  function reattachPDFs(list){
+    return list.map(c=>{
+      try{const p=localStorage.getItem("cap_pdf_"+c.id);if(p)return{...c,contractFile:JSON.parse(p)};}catch{}
+      return c;
+    });
+  }
+
   useEffect(()=>{
     setSync("loading");
     cloudRead()
-      .then(d=>{if(d)setContracts(mergeDefaults(d));setSync("ok");})
+      .then(d=>{if(d)setContracts(reattachPDFs(mergeDefaults(d)));setSync("ok");})
       .catch(()=>{
         setSync("error");
-        try{const l=JSON.parse(localStorage.getItem("cap_v1")||"null");if(l)setContracts(mergeDefaults(l));}catch{}
+        try{const l=JSON.parse(localStorage.getItem("cap_v1")||"null");if(l)setContracts(reattachPDFs(mergeDefaults(l)));}catch{}
         showToast("Using offline data","info");
       });
   },[]);
 
   function save(upd,msg,type="success"){
-    setContracts(upd);localStorage.setItem("cap_v1",JSON.stringify(upd));
+    setContracts(upd);
+    localStorage.setItem("cap_v1",JSON.stringify(upd));
+    // Save PDFs to their own localStorage keys, strip from cloud payload
+    const cloudData=upd.map(c=>{
+      if(c.contractFile){
+        localStorage.setItem("cap_pdf_"+c.id,JSON.stringify(c.contractFile));
+        const{contractFile,...rest}=c;return rest;
+      }
+      // If PDF was removed, clear its localStorage key too
+      localStorage.removeItem("cap_pdf_"+c.id);
+      return c;
+    });
     setSync("saving");
-    cloudWrite(upd)
+    cloudWrite(cloudData)
       .then(()=>{setSync("ok");if(msg)showToast(msg,type);})
       .catch(()=>{setSync("error");showToast("Saved locally — cloud sync failed","info");});
   }
