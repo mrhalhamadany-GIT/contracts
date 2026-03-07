@@ -11,8 +11,8 @@
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet"/>
   <style>
     :root {
-      --bg:#080d1e; --bg2:#0c1124; --card:#111828; --card2:#161e35;
-      --border:rgba(255,255,255,0.09); --border2:rgba(255,255,255,0.16);
+      --bg:#0c0a06; --bg2:#100d08; --card:#18130a; --card2:#1e180e;
+      --border:rgba(255,210,140,0.08); --border2:rgba(255,210,140,0.14);
       --border-a:rgba(99,102,241,0.3);
       --a:#6366f1; --a2:#4f46e5; --a3:#818cf8; --a4:#a5b4fc;
       --pos:#34d399; --pos2:#10b981;
@@ -45,23 +45,23 @@
     @keyframes shake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-5px)}40%,80%{transform:translateX(5px)}}
     @keyframes cardReveal{0%{opacity:0;transform:translateY(28px) scale(0.96)}100%{opacity:1;transform:translateY(0) scale(1)}}
 
-    /* ── BACKGROUND — premium layered depth ── */
+    /* ── BACKGROUND — warm obsidian depth ── */
     .bg-base{position:fixed;inset:0;pointer-events:none;z-index:0;
       background:
-        radial-gradient(ellipse 85% 55% at 75% -8%, rgba(99,102,241,0.22) 0%, transparent 58%),
-        radial-gradient(ellipse 60% 50% at -8% 85%, rgba(34,211,238,0.09) 0%, transparent 55%),
-        radial-gradient(ellipse 45% 40% at 50% 110%, rgba(79,70,229,0.1) 0%, transparent 55%),
-        linear-gradient(160deg, #0e1428 0%, #080d1e 45%, #080c1c 100%)}
+        radial-gradient(ellipse 85% 55% at 75% -8%, rgba(251,191,36,0.14) 0%, transparent 58%),
+        radial-gradient(ellipse 55% 45% at -8% 85%, rgba(245,158,11,0.08) 0%, transparent 55%),
+        radial-gradient(ellipse 45% 40% at 50% 110%, rgba(180,100,0,0.09) 0%, transparent 55%),
+        linear-gradient(160deg, #130f07 0%, #0c0a06 45%, #0a0804 100%)}
     .bg-dots{position:fixed;inset:0;pointer-events:none;z-index:0;
       background-image:
-        linear-gradient(rgba(148,163,212,0.055) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(148,163,212,0.055) 1px, transparent 1px);
+        linear-gradient(rgba(251,191,36,0.045) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(251,191,36,0.045) 1px, transparent 1px);
       background-size:48px 48px;
       mask-image:radial-gradient(ellipse 85% 75% at 50% 30%, black 0%, transparent 100%);
       -webkit-mask-image:radial-gradient(ellipse 85% 75% at 50% 30%, black 0%, transparent 100%)}
-    /* Top accent line — brighter */
+    /* Top accent line — gold */
     .bg-topline{position:fixed;top:0;left:0;right:0;height:1px;z-index:101;
-      background:linear-gradient(90deg,transparent 0%,rgba(99,102,241,0.75) 25%,rgba(129,140,248,1) 50%,rgba(99,102,241,0.75) 75%,transparent 100%)}
+      background:linear-gradient(90deg,transparent 0%,rgba(251,191,36,0.65) 25%,rgba(253,211,77,0.95) 50%,rgba(251,191,36,0.65) 75%,transparent 100%)}
     .noise{position:fixed;inset:0;pointer-events:none;z-index:0;opacity:0.022;
       background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
       background-size:180px}
@@ -150,7 +150,7 @@
     .toast.show{transform:translateX(-50%) translateY(0)}
 
     /* ── NAV ── */
-    .nav{background:rgba(8,13,30,0.94);backdrop-filter:blur(36px);-webkit-backdrop-filter:blur(36px);
+    .nav{background:rgba(12,9,5,0.96);backdrop-filter:blur(36px);-webkit-backdrop-filter:blur(36px);
       border-bottom:1px solid rgba(255,255,255,0.06);height:var(--nav-h);position:sticky;top:0;z-index:100;
       display:flex;align-items:center;justify-content:space-between;padding:0 28px}
 
@@ -158,14 +158,14 @@
     .overlay{position:fixed;inset:0;background:rgba(0,0,0,0.78);backdrop-filter:blur(8px);
       -webkit-backdrop-filter:blur(8px);z-index:200;display:flex;align-items:center;
       justify-content:center;animation:fadeIn 0.18s ease;padding:20px}
-    .modal-card{animation:scaleIn 0.26s cubic-bezier(0.34,1.56,0.64,1);background:#0d1226;
+    .modal-card{animation:scaleIn 0.26s cubic-bezier(0.34,1.56,0.64,1);background:#110d07;
       border:1px solid rgba(255,255,255,0.09);border-radius:24px;padding:32px;width:100%;
       overflow-y:auto;box-shadow:0 48px 120px rgba(0,0,0,0.75),0 0 0 1px rgba(99,102,241,0.07);position:relative}
     .modal-top{position:absolute;top:0;left:0;right:0;height:1px;
       background:linear-gradient(90deg,transparent,rgba(99,102,241,0.5),transparent);border-radius:24px 24px 0 0}
 
     /* ── HERO BANNER ── */
-    .hero-banner{background:linear-gradient(135deg,rgba(55,48,163,0.22) 0%,rgba(20,15,80,0.1) 50%,rgba(99,102,241,0.12) 100%);
+    .hero-banner{background:linear-gradient(135deg,rgba(120,80,0,0.22) 0%,rgba(80,50,0,0.1) 50%,rgba(251,191,36,0.1) 100%);
       border:1px solid rgba(99,102,241,0.13);border-radius:24px;padding:28px 32px;position:relative;overflow:hidden}
     .hero-banner::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;
       background:linear-gradient(90deg,transparent,rgba(99,102,241,0.55),transparent)}
@@ -173,7 +173,7 @@
       background:radial-gradient(circle,rgba(99,102,241,0.07) 0%,transparent 65%);pointer-events:none}
 
     /* ── SECTION CARD ── */
-    .sect{background:rgba(10,14,32,0.95);border:1px solid var(--border);border-radius:20px;padding:22px 26px;position:relative;overflow:hidden}
+    .sect{background:rgba(14,10,5,0.96);border:1px solid var(--border);border-radius:20px;padding:22px 26px;position:relative;overflow:hidden}
     .sect::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;
       background:linear-gradient(90deg,transparent,rgba(255,255,255,0.07),transparent)}
 
@@ -598,7 +598,7 @@ function HomePage({contracts,totalPortfolio,totalNet,ro,openC,openModal,exportB,
 }
 
 // ── DASHBOARD PAGE ────────────────────────────────────────────────────────────
-function DashboardPage({contracts,totalPortfolio,totalNet}){
+function DashboardPage({contracts,totalPortfolio,totalNet,auditLog}){
   const totalRev=contracts.reduce((s,c)=>s+c.items.filter(i=>isIncome(i.type)).reduce((a,i)=>a+i.amount,0),0);
   const totalCosts=contracts.reduce((s,c)=>s+c.items.filter(i=>!isIncome(i.type)).reduce((a,i)=>a+i.amount,0),0);
   const overallMargin=totalPortfolio>0?((totalNet/totalPortfolio)*100).toFixed(1):"0";
@@ -609,7 +609,7 @@ function DashboardPage({contracts,totalPortfolio,totalNet}){
   const profitable=contracts.filter(c=>cNet(c)>=0).length;
   const healthPct=contracts.length>0?Math.round((profitable/contracts.length)*100):100;
   const hCol=healthPct>=70?"#34d399":healthPct>=40?"#fbbf24":"#f87171";
-  const recentItems=contracts.flatMap(c=>c.items.map(i=>({...i,contractName:c.name}))).sort((a,b)=>new Date(b.date||0)-new Date(a.date||0)).slice(0,6);
+  const auditEntries=auditLog||[];
   const kpis=[
     {label:"Portfolio Value",val:fmtShort(totalPortfolio),sub:contracts.length+" active contracts",color:"#818cf8",bg:"linear-gradient(135deg,rgba(99,102,241,0.13),rgba(99,102,241,0.05))",border:"rgba(99,102,241,0.22)",icon:"◈"},
     {label:"Revenue In",val:fmtShort(totalRev),sub:"total received",color:"#34d399",bg:"linear-gradient(135deg,rgba(52,211,153,0.11),rgba(52,211,153,0.04))",border:"rgba(52,211,153,0.22)",icon:"↑"},
@@ -645,7 +645,7 @@ function DashboardPage({contracts,totalPortfolio,totalNet}){
       <div style={{display:"grid",gridTemplateColumns:"1fr 300px",gap:16,marginBottom:16}}>
 
         {/* Contract Performance */}
-        <div className="sect" style={{background:"rgba(8,9,22,0.95)"}}>
+        <div className="sect" style={{background:"rgba(14,10,5,0.96)"}}>
           <div style={{fontSize:11,fontWeight:700,color:"var(--t3)",textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:20}}>Contract Performance</div>
           {contracts.length===0
             ?<div className="empty-state"><div className="empty-icon">📊</div><div style={{fontSize:13,color:"var(--t4)"}}>No contracts yet</div></div>
@@ -688,7 +688,7 @@ function DashboardPage({contracts,totalPortfolio,totalNet}){
         <div style={{display:"flex",flexDirection:"column",gap:16}}>
 
           {/* Cost Breakdown */}
-          <div className="sect" style={{background:"rgba(8,9,22,0.95)"}}>
+          <div className="sect" style={{background:"rgba(14,10,5,0.96)"}}>
             <div style={{fontSize:11,fontWeight:700,color:"var(--t3)",textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:18}}>Cost Breakdown</div>
             {costByType.length===0
               ?<div style={{textAlign:"center",padding:"18px 0",fontSize:12,color:"var(--t5)"}}>No costs recorded</div>
@@ -713,7 +713,7 @@ function DashboardPage({contracts,totalPortfolio,totalNet}){
           </div>
 
           {/* Portfolio Health */}
-          <div className="sect" style={{background:"rgba(8,9,22,0.95)"}}>
+          <div className="sect" style={{background:"rgba(14,10,5,0.96)"}}>
             <div style={{fontSize:11,fontWeight:700,color:"var(--t3)",textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:18}}>Portfolio Health</div>
             <div style={{display:"flex",alignItems:"center",gap:20}}>
               <div style={{position:"relative",width:72,height:72,flexShrink:0}}>
@@ -741,26 +741,46 @@ function DashboardPage({contracts,totalPortfolio,totalNet}){
         </div>
       </div>
 
-      {/* Recent Activity */}
-      <div className="sect" style={{background:"rgba(8,9,22,0.95)"}}>
-        <div style={{fontSize:11,fontWeight:700,color:"var(--t3)",textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:18}}>Recent Activity</div>
-        {recentItems.length===0
-          ?<div style={{textAlign:"center",padding:"20px 0",fontSize:12,color:"var(--t5)"}}>No entries recorded yet</div>
-          :<div>
-            {recentItems.map((item,i)=>{
-              const inc=isIncome(item.type);
-              const col=TC[item.type]?.c||(inc?"#34d399":"#f87171");
-              const ico=TC[item.type]?.icon||(inc?"↑":"↓");
+      {/* Audit Log */}
+      <div className="sect" style={{background:"rgba(14,10,5,0.96)"}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:18}}>
+          <div style={{fontSize:11,fontWeight:700,color:"var(--t3)",textTransform:"uppercase",letterSpacing:"0.1em"}}>Audit Log</div>
+          <div style={{display:"flex",alignItems:"center",gap:10}}>
+            <span style={{fontSize:10,color:"var(--t4)",fontWeight:500}}>{auditEntries.length} records</span>
+            <span style={{fontSize:9,fontWeight:700,color:"#fbbf24",background:"rgba(251,191,36,0.1)",border:"1px solid rgba(251,191,36,0.2)",borderRadius:6,padding:"2px 8px",letterSpacing:"0.05em"}}>READ ONLY</span>
+          </div>
+        </div>
+        {auditEntries.length===0
+          ?<div style={{textAlign:"center",padding:"28px 0"}}>
+            <div style={{fontSize:22,marginBottom:10,opacity:0.3}}>◎</div>
+            <div style={{fontSize:12,color:"var(--t5)"}}>No changes recorded yet</div>
+            <div style={{fontSize:10,color:"var(--t5)",marginTop:4,opacity:0.7}}>Actions like creating contracts or adding entries will appear here</div>
+          </div>
+          :<div style={{maxHeight:460,overflowY:"auto",paddingRight:2}}>
+            {auditEntries.map((entry,i)=>{
+              const isCreate=entry.action.includes("Created");
+              const isDelete=entry.action.includes("Deleted");
+              const isContractAction=entry.action.includes("Contract");
+              const actionColor=isCreate?"#34d399":isDelete?"#f87171":isContractAction?"#818cf8":"#60a5fa";
+              const actionBg=isCreate?"rgba(52,211,153,0.1)":isDelete?"rgba(248,113,113,0.1)":isContractAction?"rgba(99,102,241,0.1)":"rgba(96,165,250,0.1)";
+              const ts=new Date(entry.ts);
+              const dateStr=ts.toLocaleDateString("en-AE",{day:"numeric",month:"short",year:"numeric"});
+              const timeStr=ts.toLocaleTimeString("en-AE",{hour:"2-digit",minute:"2-digit",hour12:true});
               return(
-                <div key={item.id||i} style={{display:"flex",alignItems:"center",gap:14,padding:"12px 0",borderBottom:i<recentItems.length-1?"1px solid rgba(255,255,255,0.04)":"none"}}>
-                  <div style={{width:34,height:34,borderRadius:10,flexShrink:0,background:TC[item.type]?.bg||"rgba(99,102,241,0.1)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:14,color:col,fontWeight:700}}>{ico}</div>
+                <div key={entry.id} style={{display:"flex",alignItems:"flex-start",gap:12,padding:"12px 0",borderBottom:i<auditEntries.length-1?"1px solid rgba(255,255,255,0.04)":"none"}}>
+                  {/* Action badge */}
+                  <div style={{background:actionBg,border:`1px solid ${actionColor}33`,borderRadius:8,padding:"4px 9px",fontSize:9.5,fontWeight:700,color:actionColor,whiteSpace:"nowrap",flexShrink:0,letterSpacing:"0.03em",marginTop:2}}>{entry.action}</div>
                   <div style={{flex:1,minWidth:0}}>
-                    <div style={{fontSize:12,fontWeight:600,color:"var(--t1)",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{item.desc}</div>
-                    <div style={{fontSize:10,color:"var(--t4)",marginTop:2}}>{item.contractName}{" · "}<span style={{color:col}}>{item.type}</span></div>
-                  </div>
-                  <div style={{flexShrink:0,textAlign:"right"}}>
-                    <div style={{fontSize:12,fontWeight:700,color:col,fontVariantNumeric:"tabular-nums"}}>{inc?"+":"-"}{fmtShort(item.amount)}</div>
-                    {item.date&&<div style={{fontSize:10,color:"var(--t5)",marginTop:2}}>{fmtDate(item.date)}</div>}
+                    <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:4,flexWrap:"wrap"}}>
+                      <span style={{fontSize:12,fontWeight:700,color:"var(--t1)",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{entry.contractName}</span>
+                      <span style={{fontSize:9,fontWeight:700,color:"var(--a3)",background:"rgba(99,102,241,0.12)",border:"1px solid rgba(99,102,241,0.22)",borderRadius:6,padding:"2px 7px",letterSpacing:"0.05em",flexShrink:0}}>{entry.user}</span>
+                    </div>
+                    {entry.detail&&<div style={{fontSize:11,color:"var(--t3)",marginBottom:4}}>{entry.detail}</div>}
+                    <div style={{fontSize:9.5,color:"var(--t5)",display:"flex",alignItems:"center",gap:6}}>
+                      <span>{dateStr}</span>
+                      <span style={{opacity:0.4}}>·</span>
+                      <span>{timeStr}</span>
+                    </div>
                   </div>
                 </div>
               );
@@ -1025,10 +1045,15 @@ function AppMain({user,onLogout}){
   const [toast,setToast]=useState({msg:"",type:"success"});
   const [search,setSearch]=useState("");
   const [filter,setFilter]=useState("All");
+  const [auditLog,setAuditLog]=useState(()=>{try{return JSON.parse(localStorage.getItem("cap_audit_v1")||"[]");}catch{return [];}});
 
   const active=contracts.find(c=>c.id===activeId);
 
   function showToast(msg,type="success"){setToast({msg,type});setTimeout(()=>setToast({msg:"",type:"success"}),3000);}
+  function addAudit(action,contractName,contractId,detail){
+    const entry={id:uid(),ts:new Date().toISOString(),user:user.username,action,contractName,contractId,detail};
+    setAuditLog(prev=>{const upd=[entry,...prev];localStorage.setItem("cap_audit_v1",JSON.stringify(upd));return upd;});
+  }
 
   useEffect(()=>{
     setSync("loading");
@@ -1064,9 +1089,11 @@ function AppMain({user,onLogout}){
     let upd;
     if(form.id){
       upd=contracts.map(c=>c.id===form.id?{...c,...form,value:parseFloat(form.value)||0}:c);
+      addAudit("Contract Updated",form.name,form.id,`Value: AED ${(parseFloat(form.value)||0).toLocaleString()}`);
     } else {
       const c={id:uid(),items:[],...form,value:parseFloat(form.value)||0};
       upd=[...contracts,c];setActiveId(c.id);setPage("detail");
+      addAudit("Contract Created",form.name,c.id,`Value: AED ${(parseFloat(form.value)||0).toLocaleString()}`);
     }
     save(upd,form.id?"Contract updated":"Contract created");closeModal();
   }
@@ -1088,20 +1115,26 @@ function AppMain({user,onLogout}){
         ?{...c,items:c.items.map(i=>i.id===form.id?{...i,...itemData}:i)}
         :c);
       save(upd,"Entry updated");
+      addAudit("Entry Updated",active?.name||"",activeId,`[${form.type}] ${form.desc.trim()}: AED ${Math.abs(parseFloat(form.amount)).toLocaleString()}`);
     } else {
       // New entry
       const item={id:uid(),...itemData};
       upd=contracts.map(c=>c.id===activeId?{...c,items:[...c.items,item]}:c);
       save(upd,"Entry added");
+      addAudit("Entry Added",active?.name||"",activeId,`[${form.type}] ${form.desc.trim()}: AED ${Math.abs(parseFloat(form.amount)).toLocaleString()}`);
     }
     closeModal();
   }
 
   function delItem(iid){
+    const item=active?.items.find(i=>i.id===iid);
     save(contracts.map(c=>c.id===activeId?{...c,items:c.items.filter(i=>i.id!==iid)}:c),"Entry deleted");
+    addAudit("Entry Deleted",active?.name||"",activeId,item?`[${item.type}] ${item.desc}: AED ${item.amount.toLocaleString()}`:"");
   }
   function delContract(id){
-    save(contracts.filter(c=>c.id!==id),"Contract deleted");
+    const c=contracts.find(x=>x.id===id);
+    save(contracts.filter(x=>x.id!==id),"Contract deleted");
+    addAudit("Contract Deleted",c?.name||"Unknown",id,`${c?.items?.length||0} entries removed`);
     setPage("home");setActiveId(null);closeModal();
   }
 
@@ -1241,7 +1274,7 @@ function AppMain({user,onLogout}){
         openModal={openModal} delItem={delItem}
         exportB={exportB} importB={importB}
         aiText={aiText} aiLoad={aiLoad} genAI={genAI}/>}
-      {page==="dashboard"&&<DashboardPage contracts={contracts} totalPortfolio={totalPortfolio} totalNet={totalNet}/>}
+      {page==="dashboard"&&<DashboardPage contracts={contracts} totalPortfolio={totalPortfolio} totalNet={totalNet} auditLog={auditLog}/>}
     </div>
   </div>;
 }
