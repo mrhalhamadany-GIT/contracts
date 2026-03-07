@@ -83,6 +83,63 @@ async function cloudWrite(contracts) {
   return true;
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// USERS
+// ─────────────────────────────────────────────────────────────────────────────
+const USERS = [
+  { username: "MRH",     password: "MRH.alhamdany", role: "admin" },
+  { username: "Ibrahim", password: "Ibrahim123",    role: "readonly" }
+];
+
+function Login({ onLogin }) {
+  const [u, setU] = React.useState("");
+  const [p, setP] = React.useState("");
+  const [err, setErr] = React.useState("");
+  const [show, setShow] = React.useState(false);
+
+  function attempt() {
+    const user = USERS.find(x => x.username.toLowerCase() === u.trim().toLowerCase() && x.password === p.trim());
+    if (user) { onLogin(user); }
+    else { setErr("Invalid username or password"); setP(""); }
+  }
+
+  return (
+    <div style={{ minHeight:"100vh", background:"#f4f7f4", display:"flex", alignItems:"center", justifyContent:"center", padding:20 }}>
+      <div style={{ background:"#fff", border:"1.5px solid #e8ede9", borderRadius:24, padding:"40px 36px", width:"100%", maxWidth:420, boxShadow:"0 8px 32px rgba(26,122,74,0.08)" }}>
+        <div style={{ textAlign:"center", marginBottom:32 }}>
+          <div style={{ width:56, height:56, background:"linear-gradient(135deg,#1a7a4a,#22a060)", borderRadius:16, display:"inline-flex", alignItems:"center", justifyContent:"center", fontSize:28, marginBottom:16 }}>📊</div>
+          <div style={{ fontSize:22, fontWeight:800, color:"#1a2e1a", marginBottom:4 }}>Contract Accountant <span style={{ color:"#1a7a4a", fontSize:12, background:"#e6f4ee", borderRadius:4, padding:"2px 6px" }}>PRO</span></div>
+          <div style={{ fontSize:13, color:"#94a3b8" }}>Sign in to continue</div>
+        </div>
+        <div style={{ marginBottom:16 }}>
+          <label style={{ fontSize:11, color:"#64748b", textTransform:"uppercase", letterSpacing:"0.08em", marginBottom:6, display:"block", fontWeight:600 }}>Username</label>
+          <input style={{ width:"100%", border:"1.5px solid #e2e8f0", borderRadius:10, padding:"12px 14px", fontSize:16, background:"#f8faf8", color:"#1a2e1a", boxSizing:"border-box" }}
+            value={u} onChange={e=>{setU(e.target.value);setErr("");}}
+            onKeyDown={e=>e.key==="Enter"&&attempt()}
+            placeholder="Enter username" autoCapitalize="none" />
+        </div>
+        <div style={{ marginBottom:24 }}>
+          <label style={{ fontSize:11, color:"#64748b", textTransform:"uppercase", letterSpacing:"0.08em", marginBottom:6, display:"block", fontWeight:600 }}>Password</label>
+          <div style={{ position:"relative" }}>
+            <input style={{ width:"100%", border:"1.5px solid #e2e8f0", borderRadius:10, padding:"12px 44px 12px 14px", fontSize:16, background:"#f8faf8", color:"#1a2e1a", boxSizing:"border-box" }}
+              type={show?"text":"password"} value={p}
+              onChange={e=>{setP(e.target.value);setErr("");}}
+              onKeyDown={e=>e.key==="Enter"&&attempt()}
+              placeholder="Enter password" />
+            <button onClick={()=>setShow(!show)} style={{ position:"absolute", right:12, top:"50%", transform:"translateY(-50%)", background:"none", border:"none", color:"#94a3b8", fontSize:18, cursor:"pointer", padding:4 }}>
+              {show?"🙈":"👁"}
+            </button>
+          </div>
+        </div>
+        {err && <div style={{ background:"#fff0f0", border:"1px solid #fca5a5", borderRadius:8, padding:"10px 14px", fontSize:13, color:"#c0392b", marginBottom:16, textAlign:"center" }}>{err}</div>}
+        <button onClick={attempt} style={{ width:"100%", background:"linear-gradient(135deg,#1a7a4a,#22a060)", border:"none", borderRadius:10, padding:"14px", color:"#fff", fontWeight:700, fontSize:16, cursor:"pointer" }}>
+          Sign In
+        </button>
+      </div>
+    </div>
+  );
+}
+
 const DEFAULTS = [
   { id:"khalifa-001", name:"Khalifa Villa", client:"Dr. Mahmoud Al-Kamali", value:1674843.46, startDate:"2026-02-23", endDate:"", notes:"Al Mireef, Plot SE-45/286, Abu Dhabi. 7% retention. Payment within 30 days of consultant approval.", items:[] },
   { id:"shamkha-001", name:"Shamkha Villa", client:"Khalfan Mohammed Saeed bin Maran Al Zaheri", value:2450000, startDate:"2026-02-26", endDate:"", notes:"Al Shamkha, Abu Dhabi - Plot 12, #039-000-002-509. Al Maghreb Al Arabi Consultants. 8% retention. Payment within 30 days.", items:[] },
@@ -117,6 +174,27 @@ function StatCard({label,value,color,sub}) {
 }
 
 function App() {
+  const [user, setUser] = useState(() => {
+    try { return JSON.parse(sessionStorage.getItem("cap_user") || "null"); } catch { return null; }
+  });
+
+  function handleLogin(u) {
+    sessionStorage.setItem("cap_user", JSON.stringify(u));
+    setUser(u);
+  }
+
+  function handleLogout() {
+    sessionStorage.removeItem("cap_user");
+    setUser(null);
+  }
+
+  if (!user) return <Login onLogin={handleLogin} />;
+
+  return <AppMain user={user} onLogout={handleLogout} />;
+}
+
+function AppMain({ user, onLogout }) {
+  const readonly = user.role === "readonly";
   const [contracts, setContracts] = useState(DEFAULTS);
   const [page, setPage] = useState("home");
   const [activeId, setActiveId] = useState(null);
@@ -258,11 +336,15 @@ function App() {
             {sync==="error"&&"⚠️ Offline"}
           </div>
           {page==="detail"&&active&&<>
-            <button className="hide-mobile" onClick={()=>{setForm({...active});setPage("edit-contract");}} style={btnO}>Edit</button>
-            <button onClick={()=>{setPage("new-item");setForm({type:"Expense"});}} style={btnG}>+ Entry</button>
+            {!readonly&&<button className="hide-mobile" onClick={()=>{setForm({...active});setPage("edit-contract");}} style={btnO}>Edit</button>}
+            {!readonly&&<button onClick={()=>{setPage("new-item");setForm({type:"Expense"});}} style={btnG}>+ Entry</button>}
           </>}
-          {page==="home"&&<button onClick={()=>{setPage("new-contract");setForm({});}} style={btnG}>+ New</button>}
+          {page==="home"&&!readonly&&<button onClick={()=>{setPage("new-contract");setForm({});}} style={btnG}>+ New</button>}
           {["new-contract","new-item","edit-contract"].includes(page)&&<button onClick={()=>setPage(activeId?"detail":"home")} style={btnO}>← Back</button>}
+          <div style={{fontSize:11,color:"#94a3b8",background:"#f4f7f4",borderRadius:20,padding:"4px 10px",whiteSpace:"nowrap"}}>
+            👤 {user.username} {readonly&&<span style={{color:"#e67e22"}}>(View only)</span>}
+          </div>
+          <button onClick={onLogout} style={{...btnO,fontSize:11,padding:"4px 10px"}}>Sign out</button>
         </div>
       </nav>
 
@@ -405,10 +487,10 @@ function App() {
             <p style={{fontSize:12,color:"#94a3b8",marginBottom:14}}>Export all contracts as a backup or restore from a previous backup.</p>
             <div style={{display:"flex",gap:10,flexWrap:"wrap"}}>
               <button style={{...btnG,fontSize:13,padding:"10px 16px"}} onClick={exportBackup}>⬇ Export Backup</button>
-              <label style={{...btnO,fontSize:13,padding:"10px 16px",display:"inline-flex",alignItems:"center",cursor:"pointer"}}>⬆ Import Backup<input type="file" accept=".json" style={{display:"none"}} onChange={importBackup}/></label>
+              {!readonly&&<label style={{...btnO,fontSize:13,padding:"10px 16px",display:"inline-flex",alignItems:"center",cursor:"pointer"}}>⬆ Import Backup<input type="file" accept=".json" style={{display:"none"}} onChange={importBackup}/></label>}
             </div>
           </div>
-          {delConfirm===active.id?(
+          {!readonly&&delConfirm===active.id?(
             <div style={{background:"#fff5f5",border:"1.5px solid #fca5a5",borderRadius:12,padding:16,display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:10}}>
               <span style={{fontSize:13,color:"#7f1d1d"}}>Delete "{active.name}" permanently?</span>
               <div style={{display:"flex",gap:10}}>
