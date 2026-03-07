@@ -217,9 +217,6 @@
     .month-header:hover .month-label{color:var(--a3)}
     .month-label{font-size:12px;font-weight:700;color:var(--t2);transition:color 0.15s}
     .month-stats{display:flex;gap:16px;font-size:11px;font-variant-numeric:tabular-nums}
-    /* ── RETENTION CARD ── */
-    .ret-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.04)}
-    .ret-row:last-child{border-bottom:none}
 
     /* ── DASHBOARD ── */
     .dash-kpi{border-radius:20px;padding:22px 24px;position:relative;overflow:hidden;transition:all 0.32s cubic-bezier(0.16,1,0.3,1);flex:1 1 160px;min-width:140px}
@@ -298,11 +295,11 @@ function mergeDefaults(d){
   DEFAULTS.forEach(def=>{if(!r.find(c=>c.id===def.id))r=[def,...r];});
   return r;
 }
-const TYPES=["Revenue","Retention Release","Expense","Salary","Cash","Materials","Transport","Other"];
-const INCOME_TYPES=["Revenue","Cash","Retention Release"];
+const TYPES=["Revenue","Expense","Salary","Cash","Materials","Transport","Other"];
+const INCOME_TYPES=["Revenue","Cash"];
 const TC={
   Revenue:{bg:"rgba(52,211,153,0.12)",c:"#34d399",dot:"#34d399",icon:"↑"},
-  "Retention Release":{bg:"rgba(52,211,153,0.1)",c:"#6ee7b7",dot:"#6ee7b7",icon:"↩"},
+
   Expense:{bg:"rgba(248,113,113,0.12)",c:"#f87171",dot:"#f87171",icon:"↓"},
   Salary:{bg:"rgba(251,191,36,0.12)",c:"#fbbf24",dot:"#fbbf24",icon:"◎"},
   Cash:{bg:"rgba(34,211,238,0.12)",c:"#22d3ee",dot:"#22d3ee",icon:"◈"},
@@ -456,12 +453,6 @@ function ContractModal({modal,form,setForm,errors,onSave,onClose,ro}){
         <input type="date" className="inp" value={form.startDate||""}
           onChange={e=>setForm(f=>({...f,startDate:e.target.value}))}/>
       </div>
-      <div>
-        <label className="lbl">Retention %</label>
-        <input type="number" min="0" max="100" step="0.1" className="inp"
-          value={form.retentionPct||""} onChange={e=>setForm(f=>({...f,retentionPct:parseFloat(e.target.value)||0}))}
-          placeholder="e.g. 7"/>
-      </div>
       <div style={{gridColumn:"span 2"}} className="s2">
         <label className="lbl">Notes & Details</label>
         <textarea className="inp" style={{minHeight:88,resize:"vertical",lineHeight:1.65}}
@@ -509,8 +500,29 @@ function ContractModal({modal,form,setForm,errors,onSave,onClose,ro}){
 }
 
 // ItemModal handles both "new-item" and "edit-item"
-function ItemModal({modal,activeName,form,setForm,errors,onSave,onClose}){
+function ItemModal({modal,activeName,form,setForm,errors,onSave,onClose,ro,activeContractId}){
   const isEdit=modal==="edit-item";
+  const [uploading,setUploading]=useState(false);
+  async function handleFile(e){
+    const file=e.target.files[0];if(!file)return;
+    if(file.size>50*1024*1024){alert("File too large. Maximum 50MB.");return;}
+    // Pre-generate entry ID for storage path if this is a new entry
+    const entryId=form.id||uid();
+    if(!form.id)setForm(f=>({...f,_preId:entryId}));
+    setUploading(true);
+    try{
+      const path=activeContractId+"/"+entryId+"/"+file.name.replace(/\s+/g,"_");
+      const res=await fetch(SB_URL+"/storage/v1/object/entry-docs/"+path,{
+        method:"POST",
+        headers:{"Authorization":"Bearer "+SB_SERVICE,"x-upsert":"true"},
+        body:file
+      });
+      if(!res.ok){const d=await res.json().catch(()=>({}));throw new Error(d.error||res.status);}
+      const url=SB_URL+"/storage/v1/object/public/entry-docs/"+path;
+      setForm(f=>({...f,_preId:entryId,entryFile:{name:file.name,url,size:file.size}}));
+    }catch(err){alert("Upload failed: "+err.message);}
+    setUploading(false);e.target.value="";
+  }
   return <div className="modal-card" style={{maxWidth:540,maxHeight:"92vh"}}>
     <div className="modal-top"/>
     <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
@@ -560,11 +572,41 @@ function ItemModal({modal,activeName,form,setForm,errors,onSave,onClose}){
       <input className={"inp"+(errors.desc?" error":"")} value={form.desc||""}
         onChange={e=>setForm(f=>({...f,desc:e.target.value}))} placeholder="e.g. Concrete supply batch #3"/>
     </div>
-    <div style={{marginBottom:26}}>
+    <div style={{marginBottom:14}}>
       <label className="lbl">Note (optional)</label>
       <input className="inp" value={form.note||""}
         onChange={e=>setForm(f=>({...f,note:e.target.value}))} placeholder="Additional details..."/>
     </div>
+    {!ro&&<div style={{marginBottom:22}}>
+      <label className="lbl">Bill / Invoice <span style={{fontSize:9,color:"var(--a3)",fontWeight:700,letterSpacing:"0.05em"}}>PDF · OPTIONAL</span></label>
+      {form.entryFile
+        ?<div style={{display:"flex",alignItems:"center",gap:10,background:"rgba(251,191,36,0.07)",border:"1px solid rgba(251,191,36,0.22)",borderRadius:12,padding:"10px 14px"}}>
+          <span style={{fontSize:16}}>📎</span>
+          <div style={{flex:1,minWidth:0}}>
+            <div style={{fontSize:12,fontWeight:600,color:"var(--t1)",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{form.entryFile.name}</div>
+            <div style={{fontSize:10,color:"var(--t4)",marginTop:1}}>{(form.entryFile.size/1024).toFixed(0)} KB</div>
+          </div>
+          <button onClick={()=>setForm(f=>({...f,entryFile:null}))}
+            style={{background:"none",border:"none",color:"var(--t4)",cursor:"pointer",fontSize:16,padding:"4px 7px",borderRadius:6,transition:"color 0.15s",lineHeight:1}}
+            onMouseEnter={e=>e.currentTarget.style.color="#f87171"} onMouseLeave={e=>e.currentTarget.style.color="var(--t4)"}>✕</button>
+        </div>
+        :uploading
+          ?<div style={{display:"flex",alignItems:"center",gap:10,background:"rgba(251,191,36,0.07)",border:"1px solid rgba(251,191,36,0.2)",borderRadius:12,padding:"14px"}}>
+            <span style={{width:16,height:16,border:"2px solid rgba(251,191,36,0.2)",borderTop:"2px solid #fbbf24",borderRadius:"50%",animation:"spin 0.6s linear infinite",flexShrink:0}}/>
+            <div style={{fontSize:12,fontWeight:600,color:"var(--a3)"}}>Uploading to cloud...</div>
+          </div>
+          :<label style={{display:"flex",alignItems:"center",gap:12,background:"rgba(255,255,255,0.03)",border:"1.5px dashed rgba(251,191,36,0.2)",borderRadius:12,padding:"14px",cursor:"pointer",transition:"all 0.2s"}}
+            onMouseEnter={e=>{e.currentTarget.style.borderColor="rgba(251,191,36,0.42)";e.currentTarget.style.background="rgba(251,191,36,0.04)"}}
+            onMouseLeave={e=>{e.currentTarget.style.borderColor="rgba(251,191,36,0.2)";e.currentTarget.style.background="rgba(255,255,255,0.03)"}}>
+            <span style={{fontSize:22,opacity:0.4}}>📎</span>
+            <div>
+              <div style={{fontSize:12,fontWeight:600,color:"var(--t2)"}}>Attach Bill / Invoice PDF</div>
+              <div style={{fontSize:10,color:"var(--t4)",marginTop:2}}>Uploads to cloud · Any device · Max 50MB</div>
+            </div>
+            <input type="file" accept=".pdf,application/pdf" style={{display:"none"}} onChange={handleFile}/>
+          </label>
+      }
+    </div>}
     <div style={{display:"flex",gap:10}}>
       <RippleBtn className="btn-p" onClick={onSave} style={{flex:1,padding:"13px"}}>
         {isEdit?"Save Changes":"Save Entry"}
@@ -1017,11 +1059,6 @@ function DetailPage({active,rev,exp,sal,mat,oth,totalCost,net,margin,ro,filtered
   const fNet=(datePreset==="all"&&!dateFrom&&!dateTo)?net:active.value+fRev-fCost;
   const isFiltered=datePreset!=="all"||dateFrom||dateTo;
 
-  // Retention stats
-  const retPct=active.retentionPct||0;
-  const retHeld=active.value*(retPct/100);
-  const retReleased=active.items.filter(i=>i.type==="Retention Release").reduce((s,i)=>s+i.amount,0);
-  const retRemaining=Math.max(0,retHeld-retReleased);
 
   // Monthly groups
   const monthGroups=useMemo(()=>{
@@ -1095,17 +1132,6 @@ function DetailPage({active,rev,exp,sal,mat,oth,totalCost,net,margin,ro,filtered
       </div>
     </div>}
 
-    {/* Retention Stats — only if retentionPct set */}
-    {retPct>0&&<div className="sect" style={{marginBottom:12}}>
-      <div style={{fontSize:11,fontWeight:700,color:"var(--t3)",textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:14}}>Retention Tracking · {retPct}%</div>
-      <div className="ret-row"><span style={{fontSize:12,color:"var(--t3)"}}>Retention Held</span><span style={{fontSize:13,fontWeight:700,color:"#f87171",fontVariantNumeric:"tabular-nums"}}>{fmt(retHeld)}</span></div>
-      <div className="ret-row"><span style={{fontSize:12,color:"var(--t3)"}}>Released So Far</span><span style={{fontSize:13,fontWeight:700,color:"#34d399",fontVariantNumeric:"tabular-nums"}}>+{fmt(retReleased)}</span></div>
-      <div className="ret-row"><span style={{fontSize:12,fontWeight:700,color:"var(--t2)"}}>Still Held</span><span style={{fontSize:14,fontWeight:800,color:retRemaining>0?"#fbbf24":"#34d399",fontVariantNumeric:"tabular-nums"}}>{fmt(retRemaining)}</span></div>
-      <div style={{marginTop:12,background:"rgba(255,255,255,0.05)",borderRadius:6,height:5,overflow:"hidden"}}>
-        <div style={{height:"100%",borderRadius:6,width:`${Math.min(100,(retReleased/Math.max(retHeld,1))*100)}%`,background:"linear-gradient(90deg,#34d399,#6ee7b7)",transition:"width 1s cubic-bezier(0.34,1.56,0.64,1)"}}/>
-      </div>
-      <div style={{fontSize:10,color:"var(--t5)",marginTop:5}}>{retHeld>0?((retReleased/retHeld)*100).toFixed(1):0}% of retention released</div>
-    </div>}
 
     {/* Entries */}
     <div className="sect" style={{marginBottom:12}}>
@@ -1192,6 +1218,7 @@ function DetailPage({active,rev,exp,sal,mat,oth,totalCost,net,margin,ro,filtered
                         <td><Badge type={item.type}/></td>
                         <td><div style={{fontSize:13,color:"var(--t1)",fontWeight:500,lineHeight:1.3}}>{item.desc}</div>
                           {item.note&&<div style={{fontSize:11,color:"var(--t3)",marginTop:3}}>{item.note}</div>}
+                          {item.entryFile&&<a href={item.entryFile.url} target="_blank" rel="noopener noreferrer" style={{fontSize:10,color:"var(--a3)",display:"inline-flex",alignItems:"center",gap:3,marginTop:4,textDecoration:"none",fontWeight:600}}>📎 View Bill</a>}
                         </td>
                         <td style={{fontSize:11,color:"var(--t3)",whiteSpace:"nowrap"}}>{fmtDate(item.date)}</td>
                         <td style={{fontSize:13,fontWeight:700,whiteSpace:"nowrap",fontVariantNumeric:"tabular-nums",color:isIncome(item.type)?"#34d399":"#f87171"}}>
@@ -1393,19 +1420,21 @@ function AppMain({user,onLogout}){
       desc:form.desc.trim(),
       amount:Math.abs(parseFloat(form.amount)),
       date:form.date,
-      note:form.note?.trim()||""
+      note:form.note?.trim()||"",
+      ...(form.entryFile?{entryFile:form.entryFile}:{entryFile:null})
     };
     let upd;
-    if(form.id){
-      // Edit existing entry — preserve id, update all other fields
+    const existingItem=active?.items.find(i=>i.id===form.id);
+    if(form.id&&existingItem){
+      // Edit existing entry
       upd=contracts.map(c=>c.id===activeId
         ?{...c,items:c.items.map(i=>i.id===form.id?{...i,...itemData}:i)}
         :c);
       save(upd,"Entry updated");
       addAudit("Entry Updated",active?.name||"",activeId,`[${form.type}] ${form.desc.trim()}: AED ${Math.abs(parseFloat(form.amount)).toLocaleString()}`);
     } else {
-      // New entry
-      const item={id:uid(),...itemData};
+      // New entry — use pre-generated ID if file was uploaded, otherwise generate new
+      const item={id:form._preId||uid(),...itemData};
       upd=contracts.map(c=>c.id===activeId?{...c,items:[...c.items,item]}:c);
       save(upd,"Entry added");
       addAudit("Entry Added",active?.name||"",activeId,`[${form.type}] ${form.desc.trim()}: AED ${Math.abs(parseFloat(form.amount)).toLocaleString()}`);
@@ -1441,9 +1470,6 @@ function AppMain({user,onLogout}){
     const cCost=c.items.filter(i=>!isIncome(i.type)).reduce((s,i)=>s+i.amount,0);
     const cNet=c.value+cRev-cCost;
     const cMargin=c.value>0?((cNet/c.value)*100).toFixed(1):"0";
-    const retPct=c.retentionPct||0;
-    const retHeld=c.value*(retPct/100);
-    const retRel=c.items.filter(i=>i.type==="Retention Release").reduce((s,i)=>s+i.amount,0);
 
     // Header bar
     doc.setFillColor(15,10,5);doc.rect(0,0,W,28,"F");
@@ -1455,7 +1481,6 @@ function AppMain({user,onLogout}){
     let metaX=14;
     if(c.client){doc.text("Client: "+c.client,metaX,36);metaX+=doc.getTextWidth("Client: "+c.client)+8;}
     if(c.startDate){doc.text("Started: "+fmtD(c.startDate),metaX,36);metaX+=doc.getTextWidth("Started: "+fmtD(c.startDate))+8;}
-    if(retPct){doc.text("Retention: "+retPct+"%",metaX,36);}
 
     // Summary table
     doc.autoTable({startY:42,theme:"grid",
@@ -1466,7 +1491,6 @@ function AppMain({user,onLogout}){
         ["Total Costs",fmtN(cCost)],
         ["Net Balance",(cNet>=0?"+":"")+fmtN(cNet)],
         ["Margin",cMargin+"%"],
-        ...(retPct?[["Retention Held",fmtN(retHeld)],["Retention Released",fmtN(retRel)],["Retention Remaining",fmtN(Math.max(0,retHeld-retRel))]]:[])
       ],
       headStyles:{fillColor:[15,10,5],textColor:[251,191,36],fontStyle:"bold",fontSize:9},
       bodyStyles:{fontSize:9,textColor:[50,30,15]},
@@ -1590,7 +1614,7 @@ function AppMain({user,onLogout}){
       {(modal==="new-contract"||modal==="edit-contract")&&
         <ContractModal modal={modal} form={form} setForm={setForm} errors={errors} onSave={saveContract} onClose={closeModal} ro={ro}/>}
       {isItemModal&&
-        <ItemModal modal={modal} activeName={active?.name} form={form} setForm={setForm} errors={errors} onSave={saveItem} onClose={closeModal}/>}
+        <ItemModal modal={modal} activeName={active?.name} form={form} setForm={setForm} errors={errors} onSave={saveItem} onClose={closeModal} ro={ro} activeContractId={activeId}/>}
       {modal==="delete-confirm"&&
         <DeleteModal name={active?.name} itemCount={active?.items?.length||0} onDelete={()=>delContract(active.id)} onClose={closeModal}/>}
     </div>}
