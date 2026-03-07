@@ -654,12 +654,12 @@ function DashboardPage({contracts,totalPortfolio,totalNet,auditLog,setAuditLog,r
             <div style={{fontSize:10,color:"var(--t4)"}}>Backup and restore all contract data</div>
           </div>
           <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
-            <button className="btn-sm" onClick={exportB} style={{display:"flex",alignItems:"center",gap:6}}>↓ Export All</button>
+            <button className="btn-sm" onClick={exportB} style={{display:"flex",alignItems:"center",gap:6}}>↑ Export All</button>
             <label className="btn-sm" style={{cursor:"pointer",display:"inline-flex",alignItems:"center",gap:6}}>
-              ↑ Import All<input type="file" accept=".json" style={{display:"none"}} onChange={importB}/>
+              ↓ Import All<input type="file" accept=".json" style={{display:"none"}} onChange={importB}/>
             </label>
             <label className="btn-sm" style={{cursor:"pointer",display:"inline-flex",alignItems:"center",gap:6}}>
-              ↑ Import Contract<input type="file" accept=".json" style={{display:"none"}} onChange={importOne}/>
+              ↓ Import Contract<input type="file" accept=".json" style={{display:"none"}} onChange={importOne}/>
             </label>
           </div>
         </div>
@@ -825,7 +825,7 @@ function DashboardPage({contracts,totalPortfolio,totalNet,auditLog,setAuditLog,r
   );
 }
 
-function DetailPage({active,rev,exp,sal,mat,oth,totalCost,net,margin,ro,filteredItems,search,setSearch,filter,setFilter,onBack,openModal,delItem,exportOne,aiText,aiLoad,genAI}){
+function DetailPage({active,rev,exp,sal,mat,oth,totalCost,net,margin,ro,filteredItems,search,setSearch,filter,setFilter,onBack,openModal,delItem,exportOnePDF,aiText,aiLoad,genAI}){
   if(!active)return null;
   return <div style={{animation:"fadeUp 0.4s cubic-bezier(0.16,1,0.3,1)"}}>
 
@@ -838,7 +838,7 @@ function DetailPage({active,rev,exp,sal,mat,oth,totalCost,net,margin,ro,filtered
         <span style={{color:"var(--t5)",fontSize:10}}>›</span>
         <span style={{color:"var(--t2)",fontWeight:600}}>{active.name}</span>
       </div>
-      <button className="btn-sm" onClick={()=>exportOne(active)} style={{fontSize:11,padding:"5px 12px"}}>↓ Export Contract</button>
+      <button className="btn-sm" onClick={()=>exportOnePDF(active)} style={{fontSize:11,padding:"5px 12px"}}>↑ Export PDF</button>
     </div>
 
     {/* Header */}
@@ -1169,11 +1169,66 @@ function AppMain({user,onLogout}){
     const a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="cap-backup-"+today()+".json";a.click();
     showToast("Backup exported");
   }
-  function exportOne(c){
-    const b=new Blob([JSON.stringify(c,null,2)],{type:"application/json"});
-    const a=document.createElement("a");a.href=URL.createObjectURL(b);
-    a.download="contract-"+c.name.replace(/\s+/g,"-")+"-"+today()+".json";a.click();
-    showToast("Contract exported");
+  function exportOnePDF(c){
+    const rev=c.items.filter(i=>isIncome(i.type)).reduce((s,i)=>s+i.amount,0);
+    const costs=c.items.filter(i=>!isIncome(i.type)).reduce((s,i)=>s+i.amount,0);
+    const net=c.value+rev-costs;
+    const margin=c.value>0?((net/c.value)*100).toFixed(1):"0";
+    const fmtN=(n,dp=2)=>"AED "+Number(n).toLocaleString("en",{minimumFractionDigits:dp,maximumFractionDigits:dp});
+    const fmtD=d=>{try{return new Date(d+"T00:00:00").toLocaleDateString("en-AE",{day:"numeric",month:"short",year:"numeric"});}catch{return d||"—";}};
+    const rows=c.items.slice().sort((a,b)=>new Date(b.date||0)-new Date(a.date||0)).map(i=>`
+      <tr>
+        <td>${fmtD(i.date)}</td>
+        <td><span style="background:${isIncome(i.type)?"#dcfce7":"#fee2e2"};color:${isIncome(i.type)?"#166534":"#991b1b"};padding:2px 8px;border-radius:12px;font-size:10px;font-weight:700">${i.type}</span></td>
+        <td>${i.desc}</td>
+        <td style="text-align:right;font-weight:700;color:${isIncome(i.type)?"#16a34a":"#dc2626"}">${isIncome(i.type)?"+":"-"}${fmtN(i.amount)}</td>
+        <td style="color:#9ca3af;font-size:11px">${i.note||"—"}</td>
+      </tr>`).join("");
+    const html=`<!DOCTYPE html><html><head><meta charset="UTF-8"/><title>${c.name} — Contract Report</title>
+    <style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:'Segoe UI',Arial,sans-serif;color:#111;background:#fff;padding:40px;font-size:13px}
+    .header{border-bottom:3px solid #d97706;padding-bottom:20px;margin-bottom:24px}
+    .brand{font-size:10px;font-weight:800;color:#d97706;letter-spacing:0.15em;text-transform:uppercase;margin-bottom:10px}
+    h1{font-size:22px;font-weight:700;color:#111;margin-bottom:6px}
+    .meta{font-size:11px;color:#6b7280;display:flex;gap:20px;flex-wrap:wrap;margin-top:8px}
+    .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px}
+    .kpi{border:1px solid #e5e7eb;border-radius:8px;padding:14px 16px}
+    .kpi-label{font-size:9px;text-transform:uppercase;letter-spacing:0.12em;color:#9ca3af;font-weight:700;margin-bottom:6px}
+    .kpi-val{font-size:17px;font-weight:800}
+    .gold{color:#d97706}.pos{color:#16a34a}.neg{color:#dc2626}
+    .section-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:#6b7280;margin-bottom:10px}
+    table{width:100%;border-collapse:collapse;font-size:12px}
+    th{text-align:left;padding:8px 12px;font-size:9px;text-transform:uppercase;letter-spacing:0.1em;color:#9ca3af;font-weight:700;border-bottom:2px solid #e5e7eb;background:#f9fafb}
+    td{padding:9px 12px;border-bottom:1px solid #f3f4f6;vertical-align:middle}
+    tr:last-child td{border-bottom:none}
+    .footer{margin-top:28px;padding-top:14px;border-top:1px solid #e5e7eb;font-size:10px;color:#9ca3af;display:flex;justify-content:space-between}
+    @media print{body{padding:20px}@page{margin:12mm}}</style></head>
+    <body>
+    <div class="header">
+      <div class="brand">Contract Accountant PRO</div>
+      <h1>${c.name}</h1>
+      <div class="meta">
+        ${c.client?`<span>Client: <strong>${c.client}</strong></span>`:""}
+        ${c.startDate?`<span>Started: <strong>${fmtD(c.startDate)}</strong></span>`:""}
+        <span>${c.items.length} entries</span>
+      </div>
+    </div>
+    <div class="kpis">
+      <div class="kpi"><div class="kpi-label">Contract Value</div><div class="kpi-val gold">${fmtN(c.value)}</div></div>
+      <div class="kpi"><div class="kpi-label">Revenue Received</div><div class="kpi-val pos">${fmtN(rev)}</div></div>
+      <div class="kpi"><div class="kpi-label">Total Costs</div><div class="kpi-val neg">${fmtN(costs)}</div></div>
+      <div class="kpi"><div class="kpi-label">Net Balance</div><div class="kpi-val ${net>=0?"pos":"neg"}">${net>=0?"+":""}${fmtN(net)}</div></div>
+    </div>
+    <div class="section-title">Entries (${c.items.length})</div>
+    ${c.items.length===0?`<p style="color:#9ca3af;padding:20px 0">No entries recorded.</p>`:`
+    <table><thead><tr><th>Date</th><th>Type</th><th>Description</th><th style="text-align:right">Amount</th><th>Note</th></tr></thead>
+    <tbody>${rows}</tbody></table>`}
+    <div class="footer">
+      <span>Contract Accountant PRO — Confidential</span>
+      <span>Generated: ${new Date().toLocaleDateString("en-AE",{day:"numeric",month:"long",year:"numeric"})} · ${new Date().toLocaleTimeString("en-AE",{hour:"2-digit",minute:"2-digit"})}</span>
+    </div></body></html>`;
+    const w=window.open("","_blank","width=950,height=750");
+    w.document.write(html);w.document.close();w.focus();
+    setTimeout(()=>w.print(),600);
   }
   function importOne(e){
     const f=e.target.files[0];if(!f)return;
@@ -1322,7 +1377,7 @@ function AppMain({user,onLogout}){
         filter={filter} setFilter={setFilter}
         onBack={()=>{setPage("home");setActiveId(null);}}
         openModal={openModal} delItem={delItem}
-        exportOne={exportOne} aiText={aiText} aiLoad={aiLoad} genAI={genAI}/>}
+        exportOnePDF={exportOnePDF} aiText={aiText} aiLoad={aiLoad} genAI={genAI}/>}
       {page==="dashboard"&&<DashboardPage contracts={contracts} totalPortfolio={totalPortfolio} totalNet={totalNet} auditLog={auditLog} setAuditLog={setAuditLog} ro={ro} exportB={exportB} importB={importB} importOne={importOne}/>}
     </div>
   </div>;
