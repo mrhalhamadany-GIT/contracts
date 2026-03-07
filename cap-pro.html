@@ -231,6 +231,22 @@
     /* ── DIVIDER ── */
     .divider{height:1px;background:rgba(255,255,255,0.055);margin:18px 0}
 
+    /* ── DASHBOARD GRIDS ── */
+    .dash-grid-charts{display:grid;grid-template-columns:1fr 340px;gap:16px;margin-bottom:16px}
+    .dash-grid-main{display:grid;grid-template-columns:1fr 300px;gap:16px;margin-bottom:16px}
+
+    /* ── MOBILE BOTTOM NAV ── */
+    .mobile-nav{display:none;position:fixed;bottom:0;left:0;right:0;z-index:300;
+      background:rgba(12,9,5,0.97);border-top:1px solid rgba(255,210,140,0.12);
+      backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
+      padding:6px 0 env(safe-area-inset-bottom,6px)}
+    .mobile-nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;
+      background:none;border:none;color:var(--t4);font-size:10px;font-weight:600;
+      cursor:pointer;padding:8px 4px;transition:color 0.18s;letter-spacing:0.03em;line-height:1}
+    .mobile-nav-btn .mn-icon{font-size:20px;line-height:1;margin-bottom:2px}
+    .mobile-nav-btn.active{color:var(--a3)}
+    .mobile-nav-btn.active .mn-icon{filter:drop-shadow(0 0 6px rgba(251,191,36,0.5))}
+
     /* ── RESPONSIVE ── */
     @media(max-width:640px){
       .hide-mob{display:none!important}
@@ -239,13 +255,20 @@
       .stats-row .stat{min-width:calc(50% - 5px)!important}
       .form-2col{grid-template-columns:1fr!important}
       .s2{grid-column:span 1!important}
-      .wrap{padding:16px 14px!important}
-      .nav{padding:0 16px!important;height:56px}
-      :root{--nav-h:56px}
+      .wrap{padding:16px 14px 90px!important}
+      .nav{padding:0 14px!important;height:54px}
+      :root{--nav-h:54px}
       .type-grid{grid-template-columns:repeat(4,1fr)!important}
-      .modal-card{padding:24px 18px!important}
-      .hero-banner{padding:20px 20px!important}
-      .sect{padding:18px 18px!important}
+      .modal-card{padding:22px 16px!important}
+      .hero-banner{padding:18px 18px!important}
+      .sect{padding:16px 16px!important}
+      .mobile-nav{display:flex}
+      .dash-grid-charts{grid-template-columns:1fr!important}
+      .dash-grid-main{grid-template-columns:1fr!important}
+      .dash-kpi{flex:1 1 calc(50% - 6px)!important;min-width:calc(50% - 6px)!important;padding:16px 14px!important}
+      .dash-kpi-val{font-size:18px!important}
+      .month-stats{gap:8px!important;font-size:10px!important}
+      .month-header{flex-wrap:wrap;gap:4px}
     }
   </style>
 </head>
@@ -276,8 +299,10 @@ const SB_ANON="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJl
 const SB_SERVICE="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt0aHNvaXRra2Jmdm92dG5ybGh6Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MjgxOTMzNSwiZXhwIjoyMDg4Mzk1MzM1fQ.n6RIS49MYYjyHlMuLfHZQX6FLpISv2yV8gWmVPYMVb8";
 const SB_H_R={"apikey":SB_ANON,"Authorization":"Bearer "+SB_ANON,"Content-Type":"application/json"};
 const SB_H_W={"apikey":SB_ANON,"Authorization":"Bearer "+SB_SERVICE,"Content-Type":"application/json","Prefer":"resolution=merge-duplicates"};
-async function cloudRead(){const r=await fetch(SB_URL+"/rest/v1/contracts?select=data&limit=1",{headers:SB_H_R});if(!r.ok)throw new Error(r.status);const rows=await r.json();return rows&&rows.length?rows[0].data:null;}
+async function cloudRead(){const r=await fetch(SB_URL+"/rest/v1/contracts?id=eq.1&select=data",{headers:SB_H_R});if(!r.ok)throw new Error(r.status);const rows=await r.json();return rows&&rows.length?rows[0].data:null;}
 async function cloudWrite(data){const r=await fetch(SB_URL+"/rest/v1/contracts?id=eq.1",{method:"PATCH",headers:SB_H_W,body:JSON.stringify({data})});if(!r.ok&&r.status!==204)throw new Error(r.status);return true;}
+async function auditRead(){try{const r=await fetch(SB_URL+"/rest/v1/contracts?id=eq.2&select=data",{headers:SB_H_R});if(!r.ok)return[];const rows=await r.json();return rows&&rows.length&&Array.isArray(rows[0].data)?rows[0].data:[];}catch{return[];}}
+async function auditWrite(log){try{await fetch(SB_URL+"/rest/v1/contracts",{method:"POST",headers:SB_H_W,body:JSON.stringify({id:2,data:log})});}catch{}}
 
 // ── CONSTANTS ─────────────────────────────────────────────────────────────────
 const USERS=[
@@ -790,6 +815,7 @@ function DashboardPage({contracts,totalPortfolio,totalNet,auditLog,setAuditLog,r
     }
     setAuditLog(filtered);
     localStorage.setItem("cap_audit_v1",JSON.stringify(filtered));
+    auditWrite(filtered); // sync globally
   }
   const totalRev=contracts.reduce((s,c)=>s+c.items.filter(i=>isIncome(i.type)).reduce((a,i)=>a+i.amount,0),0);
   const totalCosts=contracts.reduce((s,c)=>s+c.items.filter(i=>!isIncome(i.type)).reduce((a,i)=>a+i.amount,0),0);
@@ -834,7 +860,7 @@ function DashboardPage({contracts,totalPortfolio,totalNet,auditLog,setAuditLog,r
       </div>
 
       {/* Charts Row */}
-      <div style={{display:"grid",gridTemplateColumns:"1fr 340px",gap:16,marginBottom:16}}>
+      <div className="dash-grid-charts">
         <div className="sect" style={{background:"rgba(14,10,5,0.96)"}}>
           <div style={{fontSize:11,fontWeight:700,color:"var(--t3)",textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:16}}>Monthly Cash Flow</div>
           {contracts.every(c=>c.items.length===0)
@@ -866,7 +892,7 @@ function DashboardPage({contracts,totalPortfolio,totalNet,auditLog,setAuditLog,r
       </div>}
 
       {/* Main 2-col grid */}
-      <div style={{display:"grid",gridTemplateColumns:"1fr 300px",gap:16,marginBottom:16}}>
+      <div className="dash-grid-main">
 
         {/* Contract Performance */}
         <div className="sect" style={{background:"rgba(14,10,5,0.96)"}}>
@@ -971,8 +997,8 @@ function DashboardPage({contracts,totalPortfolio,totalNet,auditLog,setAuditLog,r
         </div>
       </div>
 
-      {/* Audit Log */}
-      <div className="sect" style={{background:"rgba(14,10,5,0.96)"}}>
+      {/* Audit Log — admin only */}
+      {!ro&&<div className="sect" style={{background:"rgba(14,10,5,0.96)"}}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:18,flexWrap:"wrap",gap:10}}>
           <div style={{display:"flex",alignItems:"center",gap:10}}>
             <div style={{fontSize:11,fontWeight:700,color:"var(--t3)",textTransform:"uppercase",letterSpacing:"0.1em"}}>Audit Log</div>
@@ -1023,7 +1049,7 @@ function DashboardPage({contracts,totalPortfolio,totalNet,auditLog,setAuditLog,r
             })}
           </div>
         }
-      </div>
+      </div>}
     </div>
   );
 }
@@ -1365,8 +1391,23 @@ function AppMain({user,onLogout}){
   function showToast(msg,type="success"){setToast({msg,type});setTimeout(()=>setToast({msg:"",type:"success"}),3000);}
   function addAudit(action,contractName,contractId,detail){
     const entry={id:uid(),ts:new Date().toISOString(),user:user.username,action,contractName,contractId,detail};
-    setAuditLog(prev=>{const upd=[entry,...prev];localStorage.setItem("cap_audit_v1",JSON.stringify(upd));return upd;});
+    setAuditLog(prev=>{
+      const upd=[entry,...prev];
+      localStorage.setItem("cap_audit_v1",JSON.stringify(upd));
+      auditWrite(upd); // sync globally to Supabase
+      return upd;
+    });
   }
+
+  // Load global audit log from Supabase on startup
+  useEffect(()=>{
+    auditRead().then(data=>{
+      if(data&&data.length){
+        setAuditLog(data);
+        localStorage.setItem("cap_audit_v1",JSON.stringify(data));
+      }
+    }).catch(()=>{});
+  },[]);
 
   useEffect(()=>{
     setSync("loading");
@@ -1678,6 +1719,16 @@ function AppMain({user,onLogout}){
         exportOnePDF={exportOnePDF} aiText={aiText} aiLoad={aiLoad} genAI={genAI}/>}
       {page==="dashboard"&&<DashboardPage contracts={contracts} totalPortfolio={totalPortfolio} totalNet={totalNet} auditLog={auditLog} setAuditLog={setAuditLog} ro={ro} exportB={exportB} importB={importB} importOne={importOne}/>}
     </div>
+
+    {/* Mobile bottom navigation */}
+    <nav className="mobile-nav">
+      <button className={"mobile-nav-btn"+(page!=="dashboard"?" active":"")} onClick={()=>{setPage("home");setActiveId(null);}}>
+        <span className="mn-icon">◱</span>Contracts
+      </button>
+      <button className={"mobile-nav-btn"+(page==="dashboard"?" active":"")} onClick={()=>setPage("dashboard")}>
+        <span className="mn-icon">◫</span>Dashboard
+      </button>
+    </nav>
   </div>;
 }
 
