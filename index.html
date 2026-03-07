@@ -41,13 +41,18 @@ const { useState, useEffect } = React;
 // ─────────────────────────────────────────────────────────────────────────────
 // CLOUD CONFIG — hardcoded bin, same on every device
 // ─────────────────────────────────────────────────────────────────────────────
-const API_KEY  = "$2a$10$3oWeL14C/9WTM96742AHpe3f.5Qq302jsxcRAw4HeQsH8UMN5w/8m";
-const BIN_ID   = "69ab8a46ae596e708f67fd90";
-const BASE_URL = `https://api.jsonbin.io/v3/bins/${BIN_ID}`;
+const MASTER_KEY = "$2a$10$3oWeL14C/9WTM96742AHpe3f.5Qq302jsxcRAw4HeQsH8UMN5w/8m";
+const ACCESS_KEY = "$2a$10$v7/jaHHXOOcWJmOaJrcIHOdB7F/57hAwlvwgZ9ZQB.Hhq80tN8MDu";
+const BIN_ID     = "69ab8a46ae596e708f67fd90";
+const BASE_URL   = `https://api.jsonbin.io/v3/bins/${BIN_ID}`;
 
 async function cloudRead() {
-  // Public bin - no auth needed for reading
-  const res = await fetch(`${BASE_URL}/latest`);
+  const res = await fetch(`${BASE_URL}/latest`, {
+    method: "GET",
+    headers: {
+      "X-Master-Key": MASTER_KEY
+    }
+  });
   if (!res.ok) throw new Error(`Read failed: ${res.status}`);
   const json = await res.json();
   const data = json.record !== undefined ? json.record : json;
@@ -57,12 +62,11 @@ async function cloudRead() {
 }
 
 async function cloudWrite(contracts) {
-  // Access key needed for writing
   const res = await fetch(BASE_URL, {
     method: "PUT",
     headers: {
       "Content-Type": "application/json",
-      "X-Access-Key": API_KEY
+      "X-Master-Key": MASTER_KEY
     },
     body: JSON.stringify({ contracts })
   });
