@@ -506,7 +506,7 @@ function DeleteModal({name,itemCount,onDelete,onClose}){
 // TOP-LEVEL PAGE COMPONENTS  (stable refs)
 // ══════════════════════════════════════════════════════════════════════════════
 
-function HomePage({contracts,totalPortfolio,totalNet,ro,openC,openModal,exportB,importB}){
+function HomePage({contracts,totalPortfolio,totalNet,ro,openC,openModal}){
   return <div style={{animation:"fadeUp 0.48s cubic-bezier(0.16,1,0.3,1)"}}>
 
     {/* Hero */}
@@ -533,15 +533,9 @@ function HomePage({contracts,totalPortfolio,totalNet,ro,openC,openModal,exportB,
     </div>
 
     {/* Actions */}
-    <div style={{display:"flex",gap:8,marginBottom:20,flexWrap:"wrap",alignItems:"center",justifyContent:"space-between"}}>
-      <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
-        <button className="btn-sm" onClick={exportB}>↓ Export Backup</button>
-        {!ro&&<label className="btn-sm" style={{cursor:"pointer",display:"inline-flex",alignItems:"center"}}>
-          ↑ Import Backup<input type="file" accept=".json" style={{display:"none"}} onChange={importB}/>
-        </label>}
-      </div>
-      {!ro&&<RippleBtn className="btn-p" style={{fontSize:13,padding:"10px 18px"}} onClick={()=>openModal("new-contract")}>+ New Contract</RippleBtn>}
-    </div>
+    {!ro&&<div style={{display:"flex",gap:8,marginBottom:20,justifyContent:"flex-end"}}>
+      <RippleBtn className="btn-p" style={{fontSize:13,padding:"10px 18px"}} onClick={()=>openModal("new-contract")}>+ New Contract</RippleBtn>
+    </div>}
 
     {/* Cards */}
     <div className="cards-grid" style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(272px,1fr))",gap:14}}>
@@ -598,7 +592,18 @@ function HomePage({contracts,totalPortfolio,totalNet,ro,openC,openModal,exportB,
 }
 
 // ── DASHBOARD PAGE ────────────────────────────────────────────────────────────
-function DashboardPage({contracts,totalPortfolio,totalNet,auditLog}){
+function DashboardPage({contracts,totalPortfolio,totalNet,auditLog,setAuditLog,ro,exportB,importB}){
+  function clearAudit(period){
+    let filtered=[];
+    if(period!=="all"){
+      const cutoff=new Date();
+      if(period==="1h")cutoff.setHours(cutoff.getHours()-1);
+      if(period==="24h")cutoff.setDate(cutoff.getDate()-1);
+      filtered=(auditLog||[]).filter(e=>new Date(e.ts)<cutoff);
+    }
+    setAuditLog(filtered);
+    localStorage.setItem("cap_audit_v1",JSON.stringify(filtered));
+  }
   const totalRev=contracts.reduce((s,c)=>s+c.items.filter(i=>isIncome(i.type)).reduce((a,i)=>a+i.amount,0),0);
   const totalCosts=contracts.reduce((s,c)=>s+c.items.filter(i=>!isIncome(i.type)).reduce((a,i)=>a+i.amount,0),0);
   const overallMargin=totalPortfolio>0?((totalNet/totalPortfolio)*100).toFixed(1):"0";
@@ -640,6 +645,22 @@ function DashboardPage({contracts,totalPortfolio,totalNet,auditLog}){
           </div>
         ))}
       </div>
+
+      {/* Admin Tools — export/import, visible to admins only */}
+      {!ro&&<div className="sect" style={{background:"rgba(14,10,5,0.96)",marginBottom:16}}>
+        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap",gap:12}}>
+          <div>
+            <div style={{fontSize:11,fontWeight:700,color:"var(--t3)",textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:3}}>Admin Tools</div>
+            <div style={{fontSize:10,color:"var(--t4)"}}>Backup and restore all contract data</div>
+          </div>
+          <div style={{display:"flex",gap:8}}>
+            <button className="btn-sm" onClick={exportB} style={{display:"flex",alignItems:"center",gap:6}}>↓ Export Backup</button>
+            <label className="btn-sm" style={{cursor:"pointer",display:"inline-flex",alignItems:"center",gap:6}}>
+              ↑ Import Backup<input type="file" accept=".json" style={{display:"none"}} onChange={importB}/>
+            </label>
+          </div>
+        </div>
+      </div>}
 
       {/* Main 2-col grid */}
       <div style={{display:"grid",gridTemplateColumns:"1fr 300px",gap:16,marginBottom:16}}>
@@ -746,12 +767,20 @@ function DashboardPage({contracts,totalPortfolio,totalNet,auditLog}){
 
       {/* Audit Log */}
       <div className="sect" style={{background:"rgba(14,10,5,0.96)"}}>
-        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:18}}>
-          <div style={{fontSize:11,fontWeight:700,color:"var(--t3)",textTransform:"uppercase",letterSpacing:"0.1em"}}>Audit Log</div>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:18,flexWrap:"wrap",gap:10}}>
           <div style={{display:"flex",alignItems:"center",gap:10}}>
+            <div style={{fontSize:11,fontWeight:700,color:"var(--t3)",textTransform:"uppercase",letterSpacing:"0.1em"}}>Audit Log</div>
             <span style={{fontSize:10,color:"var(--t4)",fontWeight:500}}>{auditEntries.length} records</span>
             <span style={{fontSize:9,fontWeight:700,color:"#fbbf24",background:"rgba(251,191,36,0.1)",border:"1px solid rgba(251,191,36,0.2)",borderRadius:6,padding:"2px 8px",letterSpacing:"0.05em"}}>READ ONLY</span>
           </div>
+          {!ro&&auditEntries.length>0&&<div style={{display:"flex",gap:4,background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.07)",borderRadius:10,padding:3}}>
+            {[["1h","Past 1h"],["24h","Past 24h"],["all","Clear All"]].map(([k,label])=>(
+              <button key={k} className="btn-sm" onClick={()=>{if(confirm(`Delete audit logs from ${label.toLowerCase()}?`))clearAudit(k);}}
+                style={{padding:"4px 10px",fontSize:10,borderRadius:7,border:"none",background:"transparent",color:k==="all"?"#f87171":"var(--t3)"}}>
+                {label}
+              </button>
+            ))}
+          </div>}
         </div>
         {auditEntries.length===0
           ?<div style={{textAlign:"center",padding:"28px 0"}}>
@@ -1265,7 +1294,7 @@ function AppMain({user,onLogout}){
     <div className="wrap" style={{maxWidth:1000,margin:"0 auto",padding:"28px 24px"}}>
       {page==="home"&&<HomePage key="home"
         contracts={contracts} totalPortfolio={totalPortfolio} totalNet={totalNet}
-        ro={ro} openC={openC} openModal={openModal} exportB={exportB} importB={importB}/>}
+        ro={ro} openC={openC} openModal={openModal}/>}
       {page==="detail"&&active&&<DetailPage key={activeId}
         active={active} rev={rev} exp={exp} sal={sal} mat={mat} oth={oth}
         totalCost={totalCost} net={net} margin={margin} ro={ro}
@@ -1275,7 +1304,7 @@ function AppMain({user,onLogout}){
         openModal={openModal} delItem={delItem}
         exportB={exportB} importB={importB}
         aiText={aiText} aiLoad={aiLoad} genAI={genAI}/>}
-      {page==="dashboard"&&<DashboardPage contracts={contracts} totalPortfolio={totalPortfolio} totalNet={totalNet} auditLog={auditLog}/>}
+      {page==="dashboard"&&<DashboardPage contracts={contracts} totalPortfolio={totalPortfolio} totalNet={totalNet} auditLog={auditLog} setAuditLog={setAuditLog} ro={ro} exportB={exportB} importB={importB}/>}
     </div>
   </div>;
 }
