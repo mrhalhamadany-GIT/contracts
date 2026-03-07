@@ -37,13 +37,13 @@
 <script type="text/babel">
 const { useState, useEffect } = React;
 
-const SB_URL = "https://kthsoitkkbfvovtnrlhz.supabase.co";
-const SB_KEY = "sb_publishable_7fCzzHjz7PucZScLCQBBOQ_jhVuNlUu";
-const SB_SECRET = "sb_secret__FCz_u7bROS-fsAYPXfKBQ_bqDIDcLY";
+const SB_URL     = "https://kthsoitkkbfvovtnrlhz.supabase.co";
+const SB_ANON    = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt0aHNvaXRra2Jmdm92dG5ybGh6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI4MTkzMzUsImV4cCI6MjA4ODM5NTMzNX0.DxnWy8ngWGnRZjYjvaBBP5Wnisg9sbsX6PbXriIpzJc";
+const SB_SERVICE = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt0aHNvaXRra2Jmdm92dG5ybGh6Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MjgxOTMzNSwiZXhwIjoyMDg4Mzk1MzM1fQ.n6RIS49MYYjyHlMuLfHZQX6FLpISv2yV8gWmVPYMVb8";
 const SB_HEADERS = {
   "Content-Type": "application/json",
-  "apikey": SB_KEY,
-  "Authorization": "Bearer " + SB_SECRET
+  "apikey": SB_ANON,
+  "Authorization": "Bearer " + SB_SERVICE
 };
 
 async function cloudRead() {
