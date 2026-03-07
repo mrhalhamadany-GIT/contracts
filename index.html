@@ -814,7 +814,7 @@ function HomePage({contracts,totalPortfolio,totalNet,ro,openC,openModal}){
 }
 
 // ── DASHBOARD PAGE ────────────────────────────────────────────────────────────
-function DashboardPage({contracts,totalPortfolio,totalNet,auditLog,setAuditLog,ro,exportB,importB,importOne}){
+function DashboardPage({contracts,totalPortfolio,totalNet,auditLog,setAuditLog,ro,exportB,importB,importOne,exportAllPDFs}){
   function clearAudit(period){
     let filtered=[];
     if(period!=="all"){
@@ -897,6 +897,7 @@ function DashboardPage({contracts,totalPortfolio,totalNet,auditLog,setAuditLog,r
             <label className="btn-sm" style={{cursor:"pointer",display:"inline-flex",alignItems:"center",gap:6}}>
               ↓ Import All<input type="file" accept=".json" style={{display:"none"}} onChange={importB}/>
             </label>
+            <button className="btn-sm" onClick={exportAllPDFs} style={{display:"flex",alignItems:"center",gap:6,color:"var(--a3)",borderColor:"rgba(251,191,36,0.25)"}}>📄 Export All PDFs</button>
           </div>
         </div>
       </div>}
@@ -1579,6 +1580,72 @@ function AppMain({user,onLogout}){
     doc.save(c.name.replace(/\s+/g,"-")+"-report.pdf");
     showToast("PDF exported");
   }
+  function exportAllPDFs(){
+    if(typeof window.jspdf==="undefined"){showToast("PDF library not loaded","error");return;}
+    if(contracts.length===0){showToast("No contracts to export","error");return;}
+    const {jsPDF}=window.jspdf;
+    const doc=new jsPDF({orientation:"portrait",unit:"mm",format:"a4"});
+    const W=doc.internal.pageSize.getWidth();
+    const fmtN=n=>"AED "+Number(n||0).toLocaleString("en",{minimumFractionDigits:2,maximumFractionDigits:2});
+    const fmtD=d=>{try{return new Date(d+"T00:00:00").toLocaleDateString("en-AE",{day:"numeric",month:"short",year:"numeric"});}catch{return d||"—";}};
+    contracts.forEach((c,idx)=>{
+      if(idx>0)doc.addPage();
+      const cRev=c.items.filter(i=>isIncome(i.type)).reduce((s,i)=>s+i.amount,0);
+      const cCost=c.items.filter(i=>!isIncome(i.type)).reduce((s,i)=>s+i.amount,0);
+      const cNet=c.value+cRev-cCost;
+      const cMargin=c.value>0?((cNet/c.value)*100).toFixed(1):"0";
+      doc.setFillColor(15,10,5);doc.rect(0,0,W,28,"F");
+      doc.setFillColor(217,119,6);doc.rect(0,26,W,2,"F");
+      doc.setFont("helvetica","bold");doc.setFontSize(8);doc.setTextColor(251,191,36);
+      doc.text("CONTRACT ACCOUNTANT PRO",14,10);
+      doc.setFontSize(7);doc.setTextColor(138,114,96);
+      doc.text(`Contract ${idx+1} of ${contracts.length}`,W-14,10,{align:"right"});
+      doc.setFontSize(16);doc.setTextColor(245,237,224);doc.text(c.name,14,20);
+      doc.setFont("helvetica","normal");doc.setFontSize(8);doc.setTextColor(138,114,96);
+      let metaX=14;
+      if(c.client){doc.text("Client: "+c.client,metaX,36);metaX+=doc.getTextWidth("Client: "+c.client)+8;}
+      if(c.startDate){doc.text("Started: "+fmtD(c.startDate),metaX,36);}
+      doc.autoTable({startY:42,theme:"grid",
+        head:[["Metric","Amount"]],
+        body:[
+          ["Contract Value",fmtN(c.value)],
+          ["Revenue Received",fmtN(cRev)],
+          ["Total Costs",fmtN(cCost)],
+          ["Net Balance",(cNet>=0?"+":"")+fmtN(cNet)],
+          ["Margin",cMargin+"%"],
+        ],
+        headStyles:{fillColor:[15,10,5],textColor:[251,191,36],fontStyle:"bold",fontSize:9},
+        bodyStyles:{fontSize:9,textColor:[50,30,15]},
+        alternateRowStyles:{fillColor:[245,237,224]},
+        columnStyles:{0:{fontStyle:"bold",cellWidth:80},1:{halign:"right"}},
+        margin:{left:14,right:14}
+      });
+      const startY=doc.lastAutoTable.finalY+8;
+      doc.setFont("helvetica","bold");doc.setFontSize(9);doc.setTextColor(138,114,96);
+      doc.text("ENTRIES ("+c.items.length+")",14,startY);
+      doc.autoTable({startY:startY+4,theme:"striped",
+        head:[["Date","Type","Description","Amount","Note"]],
+        body:c.items.slice().sort((a,b)=>new Date(b.date||0)-new Date(a.date||0)).map(i=>[
+          fmtD(i.date),i.type,i.desc,
+          (isIncome(i.type)?"+":"−")+fmtN(i.amount),
+          i.note||"—"
+        ]),
+        headStyles:{fillColor:[15,10,5],textColor:[251,191,36],fontStyle:"bold",fontSize:8},
+        bodyStyles:{fontSize:8,textColor:[50,30,15]},
+        alternateRowStyles:{fillColor:[250,244,235]},
+        columnStyles:{3:{halign:"right"},4:{textColor:[138,114,96]}},
+        didParseCell:data=>{if(data.section==="body"&&data.column.index===3){const v=data.cell.raw||"";data.cell.styles.textColor=v.startsWith("+")?[22,163,74]:[220,38,38];}},
+        margin:{left:14,right:14}
+      });
+      const fY=doc.internal.pageSize.getHeight()-12;
+      doc.setDrawColor(200,180,150);doc.line(14,fY-4,W-14,fY-4);
+      doc.setFont("helvetica","normal");doc.setFontSize(7);doc.setTextColor(138,114,96);
+      doc.text("Contract Accountant PRO — Confidential",14,fY);
+      doc.text("Generated: "+new Date().toLocaleDateString("en-AE",{day:"numeric",month:"long",year:"numeric",hour:"2-digit",minute:"2-digit"}),W-14,fY,{align:"right"});
+    });
+    doc.save("all-contracts-report-"+today()+".pdf");
+    showToast("All contracts exported as PDF");
+  }
   function importOne(e){
     const f=e.target.files[0];if(!f)return;
     const r=new FileReader();
@@ -1727,7 +1794,7 @@ function AppMain({user,onLogout}){
         onBack={()=>{setPage("home");setActiveId(null);}}
         openModal={openModal} delItem={delItem}
         exportOnePDF={exportOnePDF} aiText={aiText} aiLoad={aiLoad} genAI={genAI}/>}
-      {page==="dashboard"&&<DashboardPage contracts={contracts} totalPortfolio={totalPortfolio} totalNet={totalNet} auditLog={auditLog} setAuditLog={setAuditLog} ro={ro} exportB={exportB} importB={importB} importOne={importOne}/>}
+      {page==="dashboard"&&<DashboardPage contracts={contracts} totalPortfolio={totalPortfolio} totalNet={totalNet} auditLog={auditLog} setAuditLog={setAuditLog} ro={ro} exportB={exportB} importB={importB} importOne={importOne} exportAllPDFs={exportAllPDFs}/>}
     </div>
 
     {/* Mobile bottom navigation — context-aware */}
