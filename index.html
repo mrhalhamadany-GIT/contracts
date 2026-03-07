@@ -41,8 +41,7 @@ const { useState, useEffect } = React;
 // ─────────────────────────────────────────────────────────────────────────────
 // CLOUD CONFIG — hardcoded bin, same on every device
 // ─────────────────────────────────────────────────────────────────────────────
-const NPOINT_ID  = "602b569a578dad7b5a12";
-const BASE_URL   = `https://api.npoint.io/${NPOINT_ID}`;
+const BASE_URL = "https://jsonblob.com/api/jsonBlob/YOUR_ID_HERE";
 
 async function cloudRead() {
   const res = await fetch(BASE_URL);
@@ -55,7 +54,7 @@ async function cloudRead() {
 
 async function cloudWrite(contracts) {
   const res = await fetch(BASE_URL, {
-    method: "POST",
+    method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ contracts })
   });
