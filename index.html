@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <meta name="apple-mobile-web-app-title" content="Contracts" />
@@ -30,144 +31,114 @@
 </head>
 <body>
 <div id="app"></div>
-
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-
 <script type="text/babel">
 const { useState, useEffect } = React;
 
-// ─────────────────────────────────────────────────────────────────────────────
-// CLOUD CONFIG — hardcoded blob, same on every device
-// ─────────────────────────────────────────────────────────────────────────────
-const BLOB_ID  = "019cc63b-c413-71c6-87f2-88f33719763a";
-const BASE_URL = `https://jsonblob.com/api/jsonBlob/${BLOB_ID}`;
+const SB_URL = "https://kthsoitkkbfvovtnrlhz.supabase.co";
+const SB_KEY = "sb_publishable_7fCzzHjz7PucZScLCQBBOQ_jhVuNlUu";
+const SB_SECRET = "sb_secret__FCz_u7bROS-fsAYPXfKBQ_bqDIDcLY";
+const SB_HEADERS = {
+  "Content-Type": "application/json",
+  "apikey": SB_KEY,
+  "Authorization": "Bearer " + SB_SECRET
+};
 
 async function cloudRead() {
-  const res = await fetch(BASE_URL, {
-    method: "GET",
-    headers: { "Content-Type": "application/json", "Accept": "application/json" }
+  const res = await fetch(SB_URL + "/rest/v1/contracts?select=data&limit=1", {
+    headers: SB_HEADERS
   });
-  if (!res.ok) throw new Error(`Read failed: ${res.status}`);
-  const json = await res.json();
-  if (Array.isArray(json.contracts)) return json.contracts;
-  if (Array.isArray(json)) return json;
-  return null;
+  if (!res.ok) throw new Error("Read failed: " + res.status);
+  const rows = await res.json();
+  if (!rows || rows.length === 0) return null;
+  return rows[0].data;
 }
 
 async function cloudWrite(contracts) {
-  const res = await fetch(BASE_URL, {
-    method: "PUT",
-    headers: { "Content-Type": "application/json", "Accept": "application/json" },
-    body: JSON.stringify({ contracts })
+  // Check if row exists
+  const checkRes = await fetch(SB_URL + "/rest/v1/contracts?select=id&limit=1", {
+    headers: SB_HEADERS
   });
-  if (!res.ok) throw new Error(`Write failed: ${res.status}`);
+  const rows = await checkRes.json();
+
+  if (rows && rows.length > 0) {
+    // Update existing row
+    const res = await fetch(SB_URL + "/rest/v1/contracts?id=eq." + rows[0].id, {
+      method: "PATCH",
+      headers: { ...SB_HEADERS, "Prefer": "return=minimal" },
+      body: JSON.stringify({ data: contracts })
+    });
+    if (!res.ok) throw new Error("Write failed: " + res.status);
+  } else {
+    // Insert new row
+    const res = await fetch(SB_URL + "/rest/v1/contracts", {
+      method: "POST",
+      headers: { ...SB_HEADERS, "Prefer": "return=minimal" },
+      body: JSON.stringify({ data: contracts })
+    });
+    if (!res.ok) throw new Error("Insert failed: " + res.status);
+  }
   return true;
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// DEFAULT CONTRACTS
-// ─────────────────────────────────────────────────────────────────────────────
 const DEFAULTS = [
-  {
-    id: "khalifa-001", name: "Khalifa Villa",
-    client: "Dr. Mahmoud Al-Kamali", value: 1674843.46,
-    startDate: "2026-02-23", endDate: "",
-    notes: "Al Mireef, Plot SE-45/286, Abu Dhabi. 7% retention. Payment within 30 days of consultant approval.",
-    items: []
-  },
-  {
-    id: "shamkha-001", name: "Shamkha Villa",
-    client: "Khalfan Mohammed Saeed bin Maran Al Zaheri", value: 2450000,
-    startDate: "2026-02-26", endDate: "",
-    notes: "Al Shamkha, Abu Dhabi – Plot 12, #039-000-002-509. Al Maghreb Al Arabi Consultants. 8% retention. Payment within 30 days.",
-    items: []
-  },
-  {
-    id: "shamkha-002", name: "Shamkha Villa 2",
-    client: "Saeed Mohammed bin Maran Al Zaheri", value: 2450000,
-    startDate: "2026-02-26", endDate: "",
-    notes: "Al Shamkha, Abu Dhabi – Plot 12, #39-002-000-512. Al Maghreb Al Arabi Consultants. 8% retention. Payment within 30 days.",
-    items: []
-  },
-  {
-    id: "shamkha-003", name: "Shamkha Villa 3",
-    client: "Khalid Mohammed Saeed bin Maran Al Zaheri", value: 2380000,
-    startDate: "2026-02-26", endDate: "",
-    notes: "Al Shamkha, Abu Dhabi – Plot 12, #39-002-000-511. Al Maghreb Al Arabi Consultants. 8% retention. Payment within 30 days.",
-    items: []
-  }
+  { id:"khalifa-001", name:"Khalifa Villa", client:"Dr. Mahmoud Al-Kamali", value:1674843.46, startDate:"2026-02-23", endDate:"", notes:"Al Mireef, Plot SE-45/286, Abu Dhabi. 7% retention. Payment within 30 days of consultant approval.", items:[] },
+  { id:"shamkha-001", name:"Shamkha Villa", client:"Khalfan Mohammed Saeed bin Maran Al Zaheri", value:2450000, startDate:"2026-02-26", endDate:"", notes:"Al Shamkha, Abu Dhabi - Plot 12, #039-000-002-509. Al Maghreb Al Arabi Consultants. 8% retention. Payment within 30 days.", items:[] },
+  { id:"shamkha-002", name:"Shamkha Villa 2", client:"Saeed Mohammed bin Maran Al Zaheri", value:2450000, startDate:"2026-02-26", endDate:"", notes:"Al Shamkha, Abu Dhabi - Plot 12, #39-002-000-512. Al Maghreb Al Arabi Consultants. 8% retention. Payment within 30 days.", items:[] },
+  { id:"shamkha-003", name:"Shamkha Villa 3", client:"Khalid Mohammed Saeed bin Maran Al Zaheri", value:2380000, startDate:"2026-02-26", endDate:"", notes:"Al Shamkha, Abu Dhabi - Plot 12, #39-002-000-511. Al Maghreb Al Arabi Consultants. 8% retention. Payment within 30 days.", items:[] }
 ];
 
 function mergeWithDefaults(data) {
   let result = Array.isArray(data) ? [...data] : [];
-  DEFAULTS.forEach(def => {
-    if (!result.find(c => c.id === def.id)) result = [def, ...result];
-  });
+  DEFAULTS.forEach(def => { if (!result.find(c => c.id === def.id)) result = [def, ...result]; });
   return result;
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// HELPERS
-// ─────────────────────────────────────────────────────────────────────────────
-const TYPES = ["Revenue", "Expense", "Salary", "Other"];
-const fmt = n => "AED " + Number(n||0).toLocaleString("en-AE", { minimumFractionDigits:2, maximumFractionDigits:2 });
+const TYPES = ["Revenue","Expense","Salary","Other"];
+const fmt = n => "AED " + Number(n||0).toLocaleString("en-AE", {minimumFractionDigits:2, maximumFractionDigits:2});
 const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2);
 
-function Badge({ type }) {
-  const styles = {
-    Revenue: { background:"#e6f4ee", color:"#1a7a4a" },
-    Expense: { background:"#fdeaea", color:"#c0392b" },
-    Salary:  { background:"#fff3e0", color:"#e67e22" },
-    Other:   { background:"#eef2ff", color:"#4f46e5" }
-  };
-  const s = styles[type] || styles.Other;
-  return <span style={{ ...s, fontSize:11, fontWeight:700, padding:"3px 10px", borderRadius:20 }}>{type}</span>;
+function Badge({type}) {
+  const m = { Revenue:{background:"#e6f4ee",color:"#1a7a4a"}, Expense:{background:"#fdeaea",color:"#c0392b"}, Salary:{background:"#fff3e0",color:"#e67e22"}, Other:{background:"#eef2ff",color:"#4f46e5"} };
+  const s = m[type]||m.Other;
+  return <span style={{...s,fontSize:11,fontWeight:700,padding:"3px 10px",borderRadius:20}}>{type}</span>;
 }
 
-function StatCard({ label, value, color, sub }) {
+function StatCard({label,value,color,sub}) {
   return (
-    <div style={{ background:"#fff", border:"1px solid #e8ede9", borderRadius:14, padding:"16px 18px", flex:1, minWidth:130 }}>
-      <div style={{ fontSize:10, color:"#94a3b8", textTransform:"uppercase", letterSpacing:"0.09em", marginBottom:6, fontWeight:600 }}>{label}</div>
-      <div style={{ fontSize:17, fontWeight:800, color:color||"#1a2e1a" }}>{value}</div>
-      {sub && <div style={{ fontSize:11, color:"#94a3b8", marginTop:3 }}>{sub}</div>}
+    <div style={{background:"#fff",border:"1px solid #e8ede9",borderRadius:14,padding:"16px 18px",flex:1,minWidth:130}}>
+      <div style={{fontSize:10,color:"#94a3b8",textTransform:"uppercase",letterSpacing:"0.09em",marginBottom:6,fontWeight:600}}>{label}</div>
+      <div style={{fontSize:17,fontWeight:800,color:color||"#1a2e1a"}}>{value}</div>
+      {sub && <div style={{fontSize:11,color:"#94a3b8",marginTop:3}}>{sub}</div>}
     </div>
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// MAIN APP
-// ─────────────────────────────────────────────────────────────────────────────
 function App() {
   const [contracts, setContracts] = useState(DEFAULTS);
-  const [page, setPage]           = useState("home");
-  const [activeId, setActiveId]   = useState(null);
-  const [form, setForm]           = useState({});
-  const [aiText, setAiText]       = useState("");
+  const [page, setPage] = useState("home");
+  const [activeId, setActiveId] = useState(null);
+  const [form, setForm] = useState({});
+  const [aiText, setAiText] = useState("");
   const [aiLoading, setAiLoading] = useState(false);
   const [delConfirm, setDelConfirm] = useState(null);
-  const [sync, setSync]           = useState("loading"); // loading | ok | saving | error
-  const [syncMsg, setSyncMsg]     = useState("");
+  const [sync, setSync] = useState("loading");
+  const [syncMsg, setSyncMsg] = useState("Loading...");
 
   const active = contracts.find(c => c.id === activeId);
 
-  // ── Load from cloud on every mount ────────────────────────────────────────
   useEffect(() => {
-    setSync("loading");
-    setSyncMsg("Loading from cloud…");
+    setSync("loading"); setSyncMsg("Loading from cloud...");
     cloudRead()
       .then(data => {
-        const merged = mergeWithDefaults(data);
-        setContracts(merged);
-        setSync("ok");
-        setSyncMsg("Synced ☁️");
+        if (data) setContracts(mergeWithDefaults(data));
+        setSync("ok"); setSyncMsg("Synced");
       })
       .catch(err => {
         console.error("Cloud load error:", err);
-        setSync("error");
-        setSyncMsg("Offline — using local data");
-        // fallback to localStorage
+        setSync("error"); setSyncMsg("Offline - using local data");
         try {
           const local = JSON.parse(localStorage.getItem("cap_v1") || "null");
           if (local) setContracts(mergeWithDefaults(local));
@@ -175,15 +146,13 @@ function App() {
       });
   }, []);
 
-  // ── Save to cloud + localStorage ─────────────────────────────────────────
   function update(updated) {
     setContracts(updated);
     localStorage.setItem("cap_v1", JSON.stringify(updated));
-    setSync("saving");
-    setSyncMsg("Saving…");
+    setSync("saving"); setSyncMsg("Saving...");
     cloudWrite(updated)
-      .then(() => { setSync("ok"); setSyncMsg("Saved ☁️"); })
-      .catch(err => { console.error("Cloud save error:", err); setSync("error"); setSyncMsg("Save failed — check connection"); });
+      .then(() => { setSync("ok"); setSyncMsg("Saved"); })
+      .catch(err => { console.error("Save error:", err); setSync("error"); setSyncMsg("Save failed"); });
   }
 
   function openContract(id) { setActiveId(id); setPage("detail"); setAiText(""); }
@@ -192,37 +161,33 @@ function App() {
     if (!form.name?.trim()) return;
     let updated;
     if (form.id) {
-      updated = contracts.map(c => c.id === form.id ? { ...c, ...form, value: parseFloat(form.value)||0 } : c);
+      updated = contracts.map(c => c.id === form.id ? {...c,...form,value:parseFloat(form.value)||0} : c);
     } else {
-      const c = { id: uid(), items: [], ...form, value: parseFloat(form.value)||0 };
+      const c = {id:uid(),items:[],...form,value:parseFloat(form.value)||0};
       updated = [...contracts, c];
       setActiveId(c.id);
     }
-    update(updated);
-    setPage("detail");
-    setForm({});
+    update(updated); setPage("detail"); setForm({});
   }
 
   function saveItem() {
     if (!form.desc?.trim() || !form.amount) return;
-    const item = { id: uid(), type: form.type||"Expense", desc: form.desc,
-      amount: parseFloat(form.amount), date: form.date||"", note: form.note||"" };
-    update(contracts.map(c => c.id === activeId ? { ...c, items: [...c.items, item] } : c));
+    const item = {id:uid(),type:form.type||"Expense",desc:form.desc,amount:parseFloat(form.amount),date:form.date||"",note:form.note||""};
+    update(contracts.map(c => c.id === activeId ? {...c,items:[...c.items,item]} : c));
     setPage("detail"); setForm({});
   }
 
   function deleteItem(itemId) {
-    update(contracts.map(c => c.id === activeId
-      ? { ...c, items: c.items.filter(i => i.id !== itemId) } : c));
+    update(contracts.map(c => c.id === activeId ? {...c,items:c.items.filter(i=>i.id!==itemId)} : c));
   }
 
   function deleteContract(id) {
-    update(contracts.filter(c => c.id !== id));
+    update(contracts.filter(c=>c.id!==id));
     setPage("home"); setActiveId(null); setDelConfirm(null);
   }
 
   function exportBackup() {
-    const blob = new Blob([JSON.stringify(contracts, null, 2)], { type:"application/json" });
+    const blob = new Blob([JSON.stringify(contracts,null,2)],{type:"application/json"});
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
     a.download = "contracts-backup-" + new Date().toISOString().slice(0,10) + ".json";
@@ -236,11 +201,10 @@ function App() {
       try {
         const parsed = JSON.parse(ev.target.result);
         if (!Array.isArray(parsed)) { alert("Invalid file."); return; }
-        if (confirm("Replace all data with this backup?")) { update(parsed); alert("✅ Restored!"); }
-      } catch { alert("❌ Could not read file."); }
+        if (confirm("Replace all data with this backup?")) { update(parsed); alert("Restored!"); }
+      } catch { alert("Could not read file."); }
     };
-    reader.readAsText(file);
-    e.target.value = "";
+    reader.readAsText(file); e.target.value = "";
   }
 
   async function generateAI() {
@@ -254,11 +218,8 @@ function App() {
     try {
       const res = await fetch("https://api.anthropic.com/v1/messages", {
         method:"POST", headers:{"Content-Type":"application/json"},
-        body: JSON.stringify({ model:"claude-sonnet-4-20250514", max_tokens:1000,
-          messages:[{ role:"user", content:
-            `You are a professional accountant. Analyze this contract and write a clear financial report in 3 short paragraphs (financial health, key risks, recommendations):\n\nContract: ${active.name}\nClient: ${active.client||"N/A"}\nContract Value: AED ${active.value}\nRevenue: AED ${rev}\nExpenses: AED ${exp}\nSalaries: AED ${sal}\nOther: AED ${oth}\nNet: AED ${net}\nEntries: ${active.items.map(i=>`[${i.type}] ${i.desc}: AED ${i.amount}`).join(", ")||"None"}`
-          }]
-        })
+        body: JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:1000,
+          messages:[{role:"user",content:"You are a professional accountant. Analyze this contract and write a clear financial report in 3 short paragraphs (financial health, key risks, recommendations):\n\nContract: "+active.name+"\nClient: "+(active.client||"N/A")+"\nContract Value: AED "+active.value+"\nRevenue: AED "+rev+"\nExpenses: AED "+exp+"\nSalaries: AED "+sal+"\nOther: AED "+oth+"\nNet: AED "+net+"\nEntries: "+(active.items.map(i=>"["+i.type+"] "+i.desc+": AED "+i.amount).join(", ")||"None")}]})
       });
       const d = await res.json();
       setAiText(d.content?.[0]?.text || "No response.");
@@ -266,352 +227,207 @@ function App() {
     setAiLoading(false);
   }
 
-  // Styles
-  const inp = { width:"100%", border:"1.5px solid #e2e8f0", borderRadius:10,
-    padding:"12px 14px", fontSize:16, background:"#f8faf8", color:"#1a2e1a", boxSizing:"border-box" };
-  const lbl = { fontSize:11, color:"#64748b", textTransform:"uppercase",
-    letterSpacing:"0.08em", marginBottom:6, display:"block", fontWeight:600 };
-  const btnG = { background:"linear-gradient(135deg,#1a7a4a,#22a060)", border:"none",
-    borderRadius:10, padding:"12px 20px", color:"#fff", fontWeight:700, fontSize:14 };
-  const btnO = { background:"#fff", border:"1.5px solid #e2e8f0", borderRadius:10,
-    padding:"12px 18px", color:"#64748b", fontWeight:600, fontSize:14 };
+  const inp = {width:"100%",border:"1.5px solid #e2e8f0",borderRadius:10,padding:"12px 14px",fontSize:16,background:"#f8faf8",color:"#1a2e1a",boxSizing:"border-box"};
+  const lbl = {fontSize:11,color:"#64748b",textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:6,display:"block",fontWeight:600};
+  const btnG = {background:"linear-gradient(135deg,#1a7a4a,#22a060)",border:"none",borderRadius:10,padding:"12px 20px",color:"#fff",fontWeight:700,fontSize:14};
+  const btnO = {background:"#fff",border:"1.5px solid #e2e8f0",borderRadius:10,padding:"12px 18px",color:"#64748b",fontWeight:600,fontSize:14};
 
   const rev = active?.items.filter(i=>i.type==="Revenue").reduce((s,i)=>s+i.amount,0)||0;
   const exp = active?.items.filter(i=>i.type==="Expense").reduce((s,i)=>s+i.amount,0)||0;
   const sal = active?.items.filter(i=>i.type==="Salary").reduce((s,i)=>s+i.amount,0)||0;
   const oth = active?.items.filter(i=>i.type==="Other").reduce((s,i)=>s+i.amount,0)||0;
-  const net = (active?.value||0) + rev - exp - sal - oth;
-  const margin = active?.value > 0 ? ((net/active.value)*100).toFixed(1) : "—";
-
-  const syncColor = sync==="error" ? "#c0392b" : sync==="saving"||sync==="loading" ? "#e67e22" : "#1a7a4a";
+  const net = (active?.value||0)+rev-exp-sal-oth;
+  const margin = active?.value>0 ? ((net/active.value)*100).toFixed(1) : "0";
+  const syncColor = sync==="error"?"#c0392b":sync==="saving"||sync==="loading"?"#e67e22":"#1a7a4a";
 
   return (
-    <div style={{ minHeight:"100vh", background:"#f4f7f4" }}>
-
-      {/* ── NAV ── */}
-      <nav className="nav-wrap" style={{ background:"#fff", borderBottom:"1.5px solid #e8ede9",
-        display:"flex", alignItems:"center", justifyContent:"space-between",
-        height:60, position:"sticky", top:0, zIndex:100, padding:"0 20px" }}>
-
-        <div style={{ display:"flex", alignItems:"center", gap:10, cursor:"pointer" }}
-          onClick={()=>{setPage("home"); setActiveId(null);}}>
-          <div style={{ width:36, height:36, background:"linear-gradient(135deg,#1a7a4a,#22a060)",
-            borderRadius:9, display:"flex", alignItems:"center", justifyContent:"center", fontSize:18 }}>📊</div>
+    <div style={{minHeight:"100vh",background:"#f4f7f4"}}>
+      <nav className="nav-wrap" style={{background:"#fff",borderBottom:"1.5px solid #e8ede9",display:"flex",alignItems:"center",justifyContent:"space-between",height:60,position:"sticky",top:0,zIndex:100,padding:"0 20px"}}>
+        <div style={{display:"flex",alignItems:"center",gap:10,cursor:"pointer"}} onClick={()=>{setPage("home");setActiveId(null);}}>
+          <div style={{width:36,height:36,background:"linear-gradient(135deg,#1a7a4a,#22a060)",borderRadius:9,display:"flex",alignItems:"center",justifyContent:"center",fontSize:18}}>📊</div>
           <div>
-            <div style={{ fontSize:15, fontWeight:800, color:"#1a2e1a" }}>
-              Contract Accountant <span style={{ color:"#1a7a4a", fontSize:10, fontWeight:800,
-                background:"#e6f4ee", borderRadius:4, padding:"2px 5px" }}>PRO</span>
-            </div>
-            <div className="nav-sub" style={{ fontSize:11, color:"#94a3b8" }}>Smart Multi-Contract Tracker</div>
+            <div style={{fontSize:15,fontWeight:800,color:"#1a2e1a"}}>Contract Accountant <span style={{color:"#1a7a4a",fontSize:10,fontWeight:800,background:"#e6f4ee",borderRadius:4,padding:"2px 5px"}}>PRO</span></div>
+            <div className="nav-sub" style={{fontSize:11,color:"#94a3b8"}}>Smart Multi-Contract Tracker</div>
           </div>
         </div>
-
-        <div style={{ display:"flex", gap:8, alignItems:"center" }}>
-          {/* Sync badge */}
-          <div style={{ fontSize:11, color:syncColor, background: sync==="error"?"#fff0f0":sync==="ok"?"#f0faf4":"#fff8ed",
-            border:`1px solid ${syncColor}22`, borderRadius:20, padding:"4px 10px", whiteSpace:"nowrap" }}>
-            {sync==="loading" && "⟳ Loading…"}
-            {sync==="saving"  && "⟳ Saving…"}
-            {sync==="ok"      && "☁️ Synced"}
-            {sync==="error"   && "⚠️ Offline"}
+        <div style={{display:"flex",gap:8,alignItems:"center"}}>
+          <div style={{fontSize:11,color:syncColor,background:sync==="error"?"#fff0f0":sync==="ok"?"#f0faf4":"#fff8ed",border:"1px solid "+syncColor+"33",borderRadius:20,padding:"4px 10px",whiteSpace:"nowrap"}}>
+            {sync==="loading"&&"⟳ Loading..."}
+            {sync==="saving"&&"⟳ Saving..."}
+            {sync==="ok"&&"☁️ Synced"}
+            {sync==="error"&&"⚠️ Offline"}
           </div>
-          {page==="detail" && active && <>
+          {page==="detail"&&active&&<>
             <button className="hide-mobile" onClick={()=>{setForm({...active});setPage("edit-contract");}} style={btnO}>Edit</button>
             <button onClick={()=>{setPage("new-item");setForm({type:"Expense"});}} style={btnG}>+ Entry</button>
           </>}
-          {page==="home" &&
-            <button onClick={()=>{setPage("new-contract");setForm({});}} style={btnG}>+ New</button>}
-          {["new-contract","new-item","edit-contract"].includes(page) &&
-            <button onClick={()=>setPage(activeId?"detail":"home")} style={btnO}>← Back</button>}
+          {page==="home"&&<button onClick={()=>{setPage("new-contract");setForm({});}} style={btnG}>+ New</button>}
+          {["new-contract","new-item","edit-contract"].includes(page)&&<button onClick={()=>setPage(activeId?"detail":"home")} style={btnO}>← Back</button>}
         </div>
       </nav>
 
-      {/* Sync message bar */}
-      {syncMsg && (
-        <div style={{ background: sync==="error"?"#fff0f0":"#f0faf4",
-          borderBottom:`1px solid ${syncColor}22`,
-          padding:"6px 20px", fontSize:12, color:syncColor, textAlign:"center" }}>
-          {syncMsg}
-        </div>
-      )}
+      {syncMsg&&<div style={{background:sync==="error"?"#fff0f0":"#f0faf4",borderBottom:"1px solid "+syncColor+"22",padding:"5px 20px",fontSize:12,color:syncColor,textAlign:"center"}}>{syncMsg}</div>}
 
-      {/* ── BODY ── */}
-      <div className="body-wrap" style={{ maxWidth:900, margin:"0 auto", padding:"24px 20px" }}>
+      <div className="body-wrap" style={{maxWidth:900,margin:"0 auto",padding:"24px 20px"}}>
 
-        {/* ══ HOME ══ */}
-        {page==="home" && <>
-          <h1 style={{ fontSize:30, fontWeight:800, color:"#1a2e1a", marginBottom:6, letterSpacing:"-0.02em" }}>
-            Your <span style={{ color:"#1a7a4a" }}>Contracts</span>
-          </h1>
-          <p style={{ color:"#64748b", marginBottom:16, fontSize:14 }}>
-            {contracts.length} contract{contracts.length!==1?"s":""} · tap to manage
-          </p>
-
-          {/* Backup bar */}
-          <div style={{ display:"flex", gap:10, marginBottom:20, flexWrap:"wrap", alignItems:"center" }}>
-            <button style={{ ...btnO, fontSize:12, padding:"8px 14px" }} onClick={exportBackup}>⬇ Export Backup</button>
-            <label style={{ ...btnO, fontSize:12, padding:"8px 14px", display:"inline-flex", alignItems:"center", cursor:"pointer" }}>
-              ⬆ Import Backup
-              <input type="file" accept=".json" style={{ display:"none" }} onChange={importBackup} />
-            </label>
+        {page==="home"&&<>
+          <h1 style={{fontSize:30,fontWeight:800,color:"#1a2e1a",marginBottom:6,letterSpacing:"-0.02em"}}>Your <span style={{color:"#1a7a4a"}}>Contracts</span></h1>
+          <p style={{color:"#64748b",marginBottom:16,fontSize:14}}>{contracts.length} contract{contracts.length!==1?"s":""} · tap to manage</p>
+          <div style={{display:"flex",gap:10,marginBottom:20,flexWrap:"wrap"}}>
+            <button style={{...btnO,fontSize:12,padding:"8px 14px"}} onClick={exportBackup}>⬇ Export Backup</button>
+            <label style={{...btnO,fontSize:12,padding:"8px 14px",display:"inline-flex",alignItems:"center",cursor:"pointer"}}>⬆ Import Backup<input type="file" accept=".json" style={{display:"none"}} onChange={importBackup}/></label>
           </div>
-
-          <div className="contract-cards" style={{ display:"grid",
-            gridTemplateColumns:"repeat(auto-fill,minmax(260px,1fr))", gap:14 }}>
-            {contracts.map(c => {
-              const cR = c.items.filter(i=>i.type==="Revenue").reduce((s,i)=>s+i.amount,0);
-              const cE = c.items.filter(i=>["Expense","Salary","Other"].includes(i.type)).reduce((s,i)=>s+i.amount,0);
-              const cN = c.value + cR - cE;
-              return (
-                <div key={c.id} onClick={()=>openContract(c.id)} style={{
-                  background:"#fff", border:"1.5px solid #e8ede9", borderRadius:16,
-                  padding:"20px 20px 16px", cursor:"pointer",
-                  boxShadow:"0 1px 4px rgba(0,0,0,0.04)", transition:"box-shadow 0.2s" }}>
-                  <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:10 }}>
-                    <div style={{ fontSize:15, fontWeight:700, color:"#1a2e1a", flex:1, marginRight:8 }}>{c.name}</div>
-                    <span style={{ fontSize:11, color:"#94a3b8", background:"#f4f7f4", borderRadius:6, padding:"3px 7px", whiteSpace:"nowrap" }}>
-                      {c.items.length} entries
-                    </span>
+          <div className="contract-cards" style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(260px,1fr))",gap:14}}>
+            {contracts.map(c=>{
+              const cR=c.items.filter(i=>i.type==="Revenue").reduce((s,i)=>s+i.amount,0);
+              const cE=c.items.filter(i=>["Expense","Salary","Other"].includes(i.type)).reduce((s,i)=>s+i.amount,0);
+              const cN=c.value+cR-cE;
+              return(
+                <div key={c.id} onClick={()=>openContract(c.id)} style={{background:"#fff",border:"1.5px solid #e8ede9",borderRadius:16,padding:"20px 20px 16px",cursor:"pointer",boxShadow:"0 1px 4px rgba(0,0,0,0.04)"}}>
+                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:10}}>
+                    <div style={{fontSize:15,fontWeight:700,color:"#1a2e1a",flex:1,marginRight:8}}>{c.name}</div>
+                    <span style={{fontSize:11,color:"#94a3b8",background:"#f4f7f4",borderRadius:6,padding:"3px 7px",whiteSpace:"nowrap"}}>{c.items.length} entries</span>
                   </div>
-                  <div style={{ fontSize:12, color:"#94a3b8", marginBottom:14,
-                    overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{c.client||"No client"}</div>
-                  <div style={{ borderTop:"1px solid #f0f0f0", paddingTop:12 }}>
-                    <div style={{ fontSize:11, color:"#94a3b8", marginBottom:3 }}>Contract Value</div>
-                    <div style={{ fontSize:15, fontWeight:700, color:"#1a2e1a" }}>{fmt(c.value)}</div>
+                  <div style={{fontSize:12,color:"#94a3b8",marginBottom:14,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{c.client||"No client"}</div>
+                  <div style={{borderTop:"1px solid #f0f0f0",paddingTop:12}}>
+                    <div style={{fontSize:11,color:"#94a3b8",marginBottom:3}}>Contract Value</div>
+                    <div style={{fontSize:15,fontWeight:700,color:"#1a2e1a"}}>{fmt(c.value)}</div>
                   </div>
-                  <div style={{ marginTop:10, display:"flex", justifyContent:"space-between" }}>
-                    <div style={{ fontSize:11, color:"#94a3b8" }}>Net Balance</div>
-                    <div style={{ fontSize:14, fontWeight:800, color:cN>=0?"#1a7a4a":"#c0392b" }}>
-                      {cN>=0?"+":""}{fmt(cN)}
-                    </div>
+                  <div style={{marginTop:10,display:"flex",justifyContent:"space-between"}}>
+                    <div style={{fontSize:11,color:"#94a3b8"}}>Net Balance</div>
+                    <div style={{fontSize:14,fontWeight:800,color:cN>=0?"#1a7a4a":"#c0392b"}}>{cN>=0?"+":""}{fmt(cN)}</div>
                   </div>
                 </div>
               );
             })}
-            <div onClick={()=>{setPage("new-contract");setForm({});}} style={{
-              border:"2px dashed #c8d8cc", borderRadius:16, padding:"20px", cursor:"pointer",
-              display:"flex", flexDirection:"column", alignItems:"center",
-              justifyContent:"center", minHeight:150, color:"#94a3b8" }}>
-              <div style={{ fontSize:28, marginBottom:6 }}>+</div>
-              <div style={{ fontSize:13, fontWeight:600 }}>Add New Contract</div>
+            <div onClick={()=>{setPage("new-contract");setForm({});}} style={{border:"2px dashed #c8d8cc",borderRadius:16,padding:"20px",cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",minHeight:150,color:"#94a3b8"}}>
+              <div style={{fontSize:28,marginBottom:6}}>+</div>
+              <div style={{fontSize:13,fontWeight:600}}>Add New Contract</div>
             </div>
           </div>
         </>}
 
-        {/* ══ NEW / EDIT CONTRACT ══ */}
-        {(page==="new-contract"||page==="edit-contract") && (
-          <div style={{ background:"#fff", border:"1.5px solid #e8ede9", borderRadius:18, padding:28, maxWidth:640 }}>
-            <h2 style={{ fontSize:22, fontWeight:800, color:"#1a2e1a", marginBottom:22 }}>
-              {page==="edit-contract"?"Edit Contract":"New Contract"}
-            </h2>
-            <div className="grid-form" style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:14, marginBottom:14 }}>
-              <div className="span-2" style={{ gridColumn:"span 2" }}>
-                <label style={lbl}>Contract Name *</label>
-                <input style={inp} value={form.name||""} onChange={e=>setForm({...form,name:e.target.value})} placeholder="e.g. Villa Project" />
-              </div>
-              <div className="span-2" style={{ gridColumn:"span 2" }}>
-                <label style={lbl}>Client / Owner</label>
-                <input style={inp} value={form.client||""} onChange={e=>setForm({...form,client:e.target.value})} />
-              </div>
-              <div>
-                <label style={lbl}>Contract Value (AED)</label>
-                <input type="number" style={inp} value={form.value||""} onChange={e=>setForm({...form,value:e.target.value})} placeholder="0.00" />
-              </div>
-              <div>
-                <label style={lbl}>Start Date</label>
-                <input type="date" style={inp} value={form.startDate||""} onChange={e=>setForm({...form,startDate:e.target.value})} />
-              </div>
+        {(page==="new-contract"||page==="edit-contract")&&(
+          <div style={{background:"#fff",border:"1.5px solid #e8ede9",borderRadius:18,padding:28,maxWidth:640}}>
+            <h2 style={{fontSize:22,fontWeight:800,color:"#1a2e1a",marginBottom:22}}>{page==="edit-contract"?"Edit Contract":"New Contract"}</h2>
+            <div className="grid-form" style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14,marginBottom:14}}>
+              <div className="span-2" style={{gridColumn:"span 2"}}><label style={lbl}>Contract Name *</label><input style={inp} value={form.name||""} onChange={e=>setForm({...form,name:e.target.value})} placeholder="e.g. Villa Project"/></div>
+              <div className="span-2" style={{gridColumn:"span 2"}}><label style={lbl}>Client / Owner</label><input style={inp} value={form.client||""} onChange={e=>setForm({...form,client:e.target.value})}/></div>
+              <div><label style={lbl}>Contract Value (AED)</label><input type="number" style={inp} value={form.value||""} onChange={e=>setForm({...form,value:e.target.value})} placeholder="0.00"/></div>
+              <div><label style={lbl}>Start Date</label><input type="date" style={inp} value={form.startDate||""} onChange={e=>setForm({...form,startDate:e.target.value})}/></div>
             </div>
-            <div style={{ marginBottom:20 }}>
-              <label style={lbl}>Notes</label>
-              <textarea style={{ ...inp, minHeight:80, resize:"vertical" }}
-                value={form.notes||""} onChange={e=>setForm({...form,notes:e.target.value})} />
-            </div>
-            <div style={{ display:"flex", gap:10 }}>
+            <div style={{marginBottom:20}}><label style={lbl}>Notes</label><textarea style={{...inp,minHeight:80,resize:"vertical"}} value={form.notes||""} onChange={e=>setForm({...form,notes:e.target.value})}/></div>
+            <div style={{display:"flex",gap:10}}>
               <button style={btnG} onClick={saveContract}>{page==="edit-contract"?"Save Changes":"Create Contract"}</button>
               <button style={btnO} onClick={()=>setPage(activeId?"detail":"home")}>Cancel</button>
             </div>
           </div>
         )}
 
-        {/* ══ NEW ITEM ══ */}
-        {page==="new-item" && (
-          <div style={{ background:"#fff", border:"1.5px solid #e8ede9", borderRadius:18, padding:28, maxWidth:640 }}>
-            <h2 style={{ fontSize:22, fontWeight:800, color:"#1a2e1a", marginBottom:22 }}>Add Entry</h2>
-            <div style={{ display:"grid", gap:14, marginBottom:20 }}>
-              <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:14 }}>
-                <div>
-                  <label style={lbl}>Type</label>
-                  <select style={inp} value={form.type||"Expense"} onChange={e=>setForm({...form,type:e.target.value})}>
-                    {TYPES.map(t=><option key={t}>{t}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <label style={lbl}>Date</label>
-                  <input type="date" style={inp} value={form.date||""} onChange={e=>setForm({...form,date:e.target.value})} />
-                </div>
+        {page==="new-item"&&(
+          <div style={{background:"#fff",border:"1.5px solid #e8ede9",borderRadius:18,padding:28,maxWidth:640}}>
+            <h2 style={{fontSize:22,fontWeight:800,color:"#1a2e1a",marginBottom:22}}>Add Entry</h2>
+            <div style={{display:"grid",gap:14,marginBottom:20}}>
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14}}>
+                <div><label style={lbl}>Type</label><select style={inp} value={form.type||"Expense"} onChange={e=>setForm({...form,type:e.target.value})}>{TYPES.map(t=><option key={t}>{t}</option>)}</select></div>
+                <div><label style={lbl}>Date</label><input type="date" style={inp} value={form.date||""} onChange={e=>setForm({...form,date:e.target.value})}/></div>
               </div>
-              <div>
-                <label style={lbl}>Description *</label>
-                <input style={inp} value={form.desc||""} onChange={e=>setForm({...form,desc:e.target.value})}
-                  placeholder="e.g. Concrete supply, Ahmed salary…" />
-              </div>
-              <div>
-                <label style={lbl}>Amount (AED) *</label>
-                <input type="number" style={inp} value={form.amount||""} onChange={e=>setForm({...form,amount:e.target.value})} placeholder="0.00" />
-              </div>
-              <div>
-                <label style={lbl}>Note (optional)</label>
-                <input style={inp} value={form.note||""} onChange={e=>setForm({...form,note:e.target.value})} placeholder="Any extra details…" />
-              </div>
+              <div><label style={lbl}>Description *</label><input style={inp} value={form.desc||""} onChange={e=>setForm({...form,desc:e.target.value})} placeholder="e.g. Concrete supply, Ahmed salary..."/></div>
+              <div><label style={lbl}>Amount (AED) *</label><input type="number" style={inp} value={form.amount||""} onChange={e=>setForm({...form,amount:e.target.value})} placeholder="0.00"/></div>
+              <div><label style={lbl}>Note (optional)</label><input style={inp} value={form.note||""} onChange={e=>setForm({...form,note:e.target.value})} placeholder="Any extra details..."/></div>
             </div>
-            <div style={{ display:"flex", gap:10 }}>
+            <div style={{display:"flex",gap:10}}>
               <button style={btnG} onClick={saveItem}>Save Entry</button>
               <button style={btnO} onClick={()=>setPage("detail")}>Cancel</button>
             </div>
           </div>
         )}
 
-        {/* ══ DETAIL ══ */}
-        {page==="detail" && active && <>
-
-          {/* Breadcrumb */}
-          <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:16, fontSize:13, color:"#94a3b8" }}>
-            <span style={{ cursor:"pointer", color:"#1a7a4a", fontWeight:600 }} onClick={()=>setPage("home")}>Contracts</span>
+        {page==="detail"&&active&&<>
+          <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:16,fontSize:13,color:"#94a3b8"}}>
+            <span style={{cursor:"pointer",color:"#1a7a4a",fontWeight:600}} onClick={()=>setPage("home")}>Contracts</span>
             <span>›</span>
-            <span style={{ color:"#1a2e1a", fontWeight:600 }}>{active.name}</span>
+            <span style={{color:"#1a2e1a",fontWeight:600}}>{active.name}</span>
           </div>
-
-          {/* Header */}
-          <div style={{ background:"#fff", border:"1.5px solid #e8ede9", borderRadius:18, padding:22, marginBottom:14 }}>
-            <div style={{ fontSize:11, color:"#94a3b8", marginBottom:4, fontWeight:600,
-              textTransform:"uppercase", letterSpacing:"0.08em" }}>
-              {active.client}{active.startDate?` · ${active.startDate}`:""}
-            </div>
-            <h2 style={{ fontSize:24, fontWeight:800, color:"#1a2e1a", letterSpacing:"-0.02em",
-              marginBottom:active.notes?8:0 }}>{active.name}</h2>
-            {active.notes && <p style={{ color:"#64748b", fontSize:13, lineHeight:1.6 }}>{active.notes}</p>}
-            <button style={{ ...btnO, marginTop:12, fontSize:12, padding:"8px 14px" }}
-              onClick={()=>{setForm({...active});setPage("edit-contract");}}>✏️ Edit Contract</button>
+          <div style={{background:"#fff",border:"1.5px solid #e8ede9",borderRadius:18,padding:22,marginBottom:14}}>
+            <div style={{fontSize:11,color:"#94a3b8",marginBottom:4,fontWeight:600,textTransform:"uppercase",letterSpacing:"0.08em"}}>{active.client}{active.startDate?" · "+active.startDate:""}</div>
+            <h2 style={{fontSize:24,fontWeight:800,color:"#1a2e1a",letterSpacing:"-0.02em",marginBottom:active.notes?8:0}}>{active.name}</h2>
+            {active.notes&&<p style={{color:"#64748b",fontSize:13,lineHeight:1.6}}>{active.notes}</p>}
+            <button style={{...btnO,marginTop:12,fontSize:12,padding:"8px 14px"}} onClick={()=>{setForm({...active});setPage("edit-contract");}}>✏️ Edit Contract</button>
           </div>
-
-          {/* Stats */}
-          <div className="stats-row" style={{ display:"flex", gap:10, marginBottom:14, flexWrap:"wrap" }}>
-            <StatCard label="Contract Value" value={fmt(active.value)} color="#1a2e1a" />
-            <StatCard label="+ Revenue"      value={fmt(rev)}          color="#1a7a4a" />
-            <StatCard label="− Expenses"     value={fmt(exp)}          color="#c0392b" />
-            <StatCard label="− Salaries"     value={fmt(sal)}          color="#e67e22" />
-            <StatCard label="Net Balance"    value={fmt(net)}          color={net>=0?"#1a7a4a":"#c0392b"} sub={`Margin: ${margin}%`} />
+          <div className="stats-row" style={{display:"flex",gap:10,marginBottom:14,flexWrap:"wrap"}}>
+            <StatCard label="Contract Value" value={fmt(active.value)} color="#1a2e1a"/>
+            <StatCard label="+ Revenue" value={fmt(rev)} color="#1a7a4a"/>
+            <StatCard label="- Expenses" value={fmt(exp)} color="#c0392b"/>
+            <StatCard label="- Salaries" value={fmt(sal)} color="#e67e22"/>
+            <StatCard label="Net Balance" value={fmt(net)} color={net>=0?"#1a7a4a":"#c0392b"} sub={"Margin: "+margin+"%"}/>
           </div>
-
-          {/* Entries */}
-          <div style={{ background:"#fff", border:"1.5px solid #e8ede9", borderRadius:18, padding:22, marginBottom:14 }}>
-            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:16 }}>
-              <h3 style={{ fontSize:16, fontWeight:800, color:"#1a2e1a" }}>
-                Entries <span style={{ fontSize:12, color:"#94a3b8", fontWeight:500 }}>({active.items.length})</span>
-              </h3>
+          <div style={{background:"#fff",border:"1.5px solid #e8ede9",borderRadius:18,padding:22,marginBottom:14}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
+              <h3 style={{fontSize:16,fontWeight:800,color:"#1a2e1a"}}>Entries <span style={{fontSize:12,color:"#94a3b8",fontWeight:500}}>({active.items.length})</span></h3>
               <button style={btnG} onClick={()=>{setPage("new-item");setForm({type:"Expense"});}}>+ Add Entry</button>
             </div>
-            {active.items.length===0 ? (
-              <div style={{ textAlign:"center", padding:"28px 0", color:"#c8d8cc" }}>
-                <div style={{ fontSize:30, marginBottom:6 }}>📋</div>
-                <div style={{ fontSize:14, fontWeight:600 }}>No entries yet</div>
-                <div style={{ fontSize:12, marginTop:4 }}>Add expenses, salaries, or revenue</div>
+            {active.items.length===0?(
+              <div style={{textAlign:"center",padding:"28px 0",color:"#c8d8cc"}}>
+                <div style={{fontSize:30,marginBottom:6}}>📋</div>
+                <div style={{fontSize:14,fontWeight:600}}>No entries yet</div>
+                <div style={{fontSize:12,marginTop:4}}>Add expenses, salaries, or revenue</div>
               </div>
-            ) : (
-              <div style={{ overflowX:"auto" }}>
+            ):(
+              <div style={{overflowX:"auto"}}>
                 <table>
-                  <thead>
-                    <tr style={{ borderBottom:"2px solid #f0f4f0" }}>
-                      {["Type","Description","Date","Amount",""].map(h=>(
-                        <th key={h} style={{ textAlign:"left", padding:"8px 10px", fontSize:10,
-                          color:"#94a3b8", textTransform:"uppercase", letterSpacing:"0.08em", fontWeight:600 }}>{h}</th>
-                      ))}
+                  <thead><tr style={{borderBottom:"2px solid #f0f4f0"}}>{["Type","Description","Date","Amount",""].map(h=><th key={h} style={{textAlign:"left",padding:"8px 10px",fontSize:10,color:"#94a3b8",textTransform:"uppercase",letterSpacing:"0.08em",fontWeight:600}}>{h}</th>)}</tr></thead>
+                  <tbody>{active.items.map(item=>(
+                    <tr key={item.id} style={{borderBottom:"1px solid #f8faf8"}}>
+                      <td style={{padding:"11px 10px"}}><Badge type={item.type}/></td>
+                      <td style={{padding:"11px 10px",fontSize:13,color:"#1a2e1a",fontWeight:500}}>{item.desc}{item.note&&<div style={{fontSize:11,color:"#94a3b8",marginTop:2}}>{item.note}</div>}</td>
+                      <td style={{padding:"11px 10px",fontSize:12,color:"#94a3b8",whiteSpace:"nowrap"}}>{item.date||"—"}</td>
+                      <td style={{padding:"11px 10px",fontSize:13,fontWeight:700,color:item.type==="Revenue"?"#1a7a4a":"#c0392b",whiteSpace:"nowrap"}}>{item.type==="Revenue"?"+":"−"}{fmt(item.amount)}</td>
+                      <td style={{padding:"11px 6px"}}><button onClick={()=>deleteItem(item.id)} style={{background:"none",border:"none",color:"#d0d8d0",fontSize:16,padding:"4px 8px"}}>✕</button></td>
                     </tr>
-                  </thead>
-                  <tbody>
-                    {active.items.map(item=>(
-                      <tr key={item.id} style={{ borderBottom:"1px solid #f8faf8" }}>
-                        <td style={{ padding:"11px 10px" }}><Badge type={item.type} /></td>
-                        <td style={{ padding:"11px 10px", fontSize:13, color:"#1a2e1a", fontWeight:500 }}>
-                          {item.desc}
-                          {item.note && <div style={{ fontSize:11, color:"#94a3b8", marginTop:2 }}>{item.note}</div>}
-                        </td>
-                        <td style={{ padding:"11px 10px", fontSize:12, color:"#94a3b8", whiteSpace:"nowrap" }}>{item.date||"—"}</td>
-                        <td style={{ padding:"11px 10px", fontSize:13, fontWeight:700,
-                          color:item.type==="Revenue"?"#1a7a4a":"#c0392b", whiteSpace:"nowrap" }}>
-                          {item.type==="Revenue"?"+":"−"}{fmt(item.amount)}
-                        </td>
-                        <td style={{ padding:"11px 6px" }}>
-                          <button onClick={()=>deleteItem(item.id)} style={{
-                            background:"none", border:"none", color:"#d0d8d0", fontSize:16, padding:"4px 8px" }}>✕</button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
+                  ))}</tbody>
                 </table>
               </div>
             )}
           </div>
-
-          {/* AI Report */}
-          <div style={{ background:"#fff", border:"1.5px solid #e8ede9", borderRadius:18, padding:22, marginBottom:14 }}>
-            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:aiText?16:0 }}>
+          <div style={{background:"#fff",border:"1.5px solid #e8ede9",borderRadius:18,padding:22,marginBottom:14}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:aiText?16:0}}>
               <div>
-                <h3 style={{ fontSize:16, fontWeight:800, color:"#1a2e1a", marginBottom:2 }}>AI Financial Report</h3>
-                {!aiText && <p style={{ fontSize:12, color:"#94a3b8" }}>Instant AI-powered analysis</p>}
+                <h3 style={{fontSize:16,fontWeight:800,color:"#1a2e1a",marginBottom:2}}>AI Financial Report</h3>
+                {!aiText&&<p style={{fontSize:12,color:"#94a3b8"}}>Instant AI-powered analysis</p>}
               </div>
-              <button style={btnG} onClick={generateAI} disabled={aiLoading}>
-                {aiLoading?"Analyzing…":"Generate Report"}
-              </button>
+              <button style={btnG} onClick={generateAI} disabled={aiLoading}>{aiLoading?"Analyzing...":"Generate Report"}</button>
             </div>
-            {aiText && (
-              <div style={{ background:"#f8faf8", borderRadius:12, padding:16, fontSize:14,
-                lineHeight:1.85, color:"#334155", borderLeft:"3px solid #1a7a4a", whiteSpace:"pre-wrap" }}>
-                {aiText}
-              </div>
-            )}
+            {aiText&&<div style={{background:"#f8faf8",borderRadius:12,padding:16,fontSize:14,lineHeight:1.85,color:"#334155",borderLeft:"3px solid #1a7a4a",whiteSpace:"pre-wrap"}}>{aiText}</div>}
           </div>
-
-          {/* Backup */}
-          <div style={{ background:"#fff", border:"1.5px solid #e8ede9", borderRadius:18, padding:22, marginBottom:14 }}>
-            <h3 style={{ fontSize:16, fontWeight:800, color:"#1a2e1a", marginBottom:6 }}>Backup & Restore</h3>
-            <p style={{ fontSize:12, color:"#94a3b8", marginBottom:14 }}>Export all contracts as a backup file or restore from a previous backup.</p>
-            <div style={{ display:"flex", gap:10, flexWrap:"wrap" }}>
-              <button style={{ ...btnG, fontSize:13, padding:"10px 16px" }} onClick={exportBackup}>⬇ Export Backup</button>
-              <label style={{ ...btnO, fontSize:13, padding:"10px 16px", display:"inline-flex", alignItems:"center", cursor:"pointer" }}>
-                ⬆ Import Backup
-                <input type="file" accept=".json" style={{ display:"none" }} onChange={importBackup} />
-              </label>
+          <div style={{background:"#fff",border:"1.5px solid #e8ede9",borderRadius:18,padding:22,marginBottom:14}}>
+            <h3 style={{fontSize:16,fontWeight:800,color:"#1a2e1a",marginBottom:6}}>Backup & Restore</h3>
+            <p style={{fontSize:12,color:"#94a3b8",marginBottom:14}}>Export all contracts as a backup or restore from a previous backup.</p>
+            <div style={{display:"flex",gap:10,flexWrap:"wrap"}}>
+              <button style={{...btnG,fontSize:13,padding:"10px 16px"}} onClick={exportBackup}>⬇ Export Backup</button>
+              <label style={{...btnO,fontSize:13,padding:"10px 16px",display:"inline-flex",alignItems:"center",cursor:"pointer"}}>⬆ Import Backup<input type="file" accept=".json" style={{display:"none"}} onChange={importBackup}/></label>
             </div>
           </div>
-
-          {/* Delete */}
-          {delConfirm===active.id ? (
-            <div style={{ background:"#fff5f5", border:"1.5px solid #fca5a5", borderRadius:12,
-              padding:16, display:"flex", justifyContent:"space-between", alignItems:"center", flexWrap:"wrap", gap:10 }}>
-              <span style={{ fontSize:13, color:"#7f1d1d" }}>Delete "{active.name}" permanently?</span>
-              <div style={{ display:"flex", gap:10 }}>
-                <button style={{ ...btnO, borderColor:"#fca5a5", color:"#c0392b" }} onClick={()=>deleteContract(active.id)}>Yes, Delete</button>
+          {delConfirm===active.id?(
+            <div style={{background:"#fff5f5",border:"1.5px solid #fca5a5",borderRadius:12,padding:16,display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:10}}>
+              <span style={{fontSize:13,color:"#7f1d1d"}}>Delete "{active.name}" permanently?</span>
+              <div style={{display:"flex",gap:10}}>
+                <button style={{...btnO,borderColor:"#fca5a5",color:"#c0392b"}} onClick={()=>deleteContract(active.id)}>Yes, Delete</button>
                 <button style={btnO} onClick={()=>setDelConfirm(null)}>Cancel</button>
               </div>
             </div>
-          ) : (
-            <div style={{ textAlign:"right", paddingBottom:40 }}>
-              <button onClick={()=>setDelConfirm(active.id)} style={{
-                background:"none", border:"none", color:"#ccc", fontSize:13 }}>
-                🗑 Delete this contract
-              </button>
+          ):(
+            <div style={{textAlign:"right",paddingBottom:40}}>
+              <button onClick={()=>setDelConfirm(active.id)} style={{background:"none",border:"none",color:"#ccc",fontSize:13}}>🗑 Delete this contract</button>
             </div>
           )}
         </>}
-
       </div>
     </div>
   );
 }
 
-ReactDOM.createRoot(document.getElementById("app")).render(<App />);
+ReactDOM.createRoot(document.getElementById("app")).render(<App/>);
 </script>
 </body>
 </html>
