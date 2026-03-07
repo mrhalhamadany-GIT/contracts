@@ -48,6 +48,58 @@
 <script type="text/babel">
 const { useState } = React;
 
+// ── Cloud Sync Config ────────────────────────────────────────────────────────
+const JSONBIN_KEY = "$2a$10$v7/jaHHXOOcWJmOaJrcIHOdB7F/57hAwlvwgZ9ZQB.Hhq80tN8MDu";
+const JSONBIN_URL = "https://api.jsonbin.io/v3/bins";
+const LOCAL_KEY = "cap_contracts_v1";
+const BIN_ID_KEY = "cap_bin_id";
+
+async function cloudLoad() {
+  const binId = localStorage.getItem(BIN_ID_KEY);
+  if (!binId) return null;
+  try {
+    const res = await fetch(`${JSONBIN_URL}/${binId}/latest`, {
+      headers: { "X-Access-Key": JSONBIN_KEY }
+    });
+    const d = await res.json();
+    return d.record?.contracts || null;
+  } catch { return null; }
+}
+
+async function cloudSave(contracts) {
+  let binId = localStorage.getItem(BIN_ID_KEY);
+  try {
+    if (!binId) {
+      // Create new bin
+      const res = await fetch(JSONBIN_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Access-Key": JSONBIN_KEY,
+          "X-Bin-Name": "ContractAccountantPRO",
+          "X-Bin-Private": "true"
+        },
+        body: JSON.stringify({ contracts })
+      });
+      const d = await res.json();
+      binId = d.metadata?.id;
+      if (binId) localStorage.setItem(BIN_ID_KEY, binId);
+    } else {
+      // Update existing bin
+      await fetch(`${JSONBIN_URL}/${binId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Access-Key": JSONBIN_KEY
+        },
+        body: JSON.stringify({ contracts })
+      });
+    }
+  } catch (e) { console.error("Cloud save failed", e); }
+  // Always save locally as backup
+  localStorage.setItem(LOCAL_KEY, JSON.stringify(contracts));
+}
+
 // ── Data ─────────────────────────────────────────────────────────────────────
 const KEY = "cap_contracts_v1";
 
@@ -108,6 +160,7 @@ function loadData() {
 
 function saveData(data) {
   try { localStorage.setItem(KEY, JSON.stringify(data)); } catch {}
+  cloudSave(data); // also save to cloud
 }
 
 const TYPES = ["Revenue", "Expense", "Salary", "Other"];
@@ -152,10 +205,34 @@ function App() {
   const [aiText, setAiText] = useState("");
   const [aiLoading, setAiLoading] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
+  const [syncStatus, setSyncStatus] = useState("loading"); // loading | synced | saved | error
 
   const active = contracts.find(c => c.id === activeId);
 
-  function update(updated) { setContracts(updated); saveData(updated); }
+  // Load from cloud on startup
+  React.useEffect(() => {
+    setSyncStatus("loading");
+    cloudLoad().then(cloudData => {
+      if (cloudData && Array.isArray(cloudData)) {
+        let result = [...cloudData];
+        DEFAULT_CONTRACTS.forEach(def => {
+          if (!result.find(c => c.id === def.id)) result = [def, ...result];
+        });
+        setContracts(result);
+        saveData(result);
+        setSyncStatus("synced");
+      } else {
+        setSyncStatus("synced");
+      }
+    }).catch(() => setSyncStatus("error"));
+  }, []);
+
+  function update(updated) {
+    setContracts(updated);
+    setSyncStatus("saving");
+    saveData(updated);
+    setTimeout(() => setSyncStatus("saved"), 1500);
+  }
 
   function openContract(id) { setActiveId(id); setPage("detail"); setAiText(""); }
 
@@ -281,6 +358,15 @@ function App() {
           </div>
         </div>
         <div style={{ display:"flex", gap:8, alignItems:"center" }}>
+          {/* Sync indicator */}
+          <div style={{ fontSize:11, color: syncStatus==="error"?"#c0392b":syncStatus==="loading"?"#e67e22":"#1a7a4a",
+            display:"flex", alignItems:"center", gap:4, marginRight:4 }}>
+            {syncStatus==="loading" && <span>⟳ Syncing…</span>}
+            {syncStatus==="saving" && <span>⟳ Saving…</span>}
+            {syncStatus==="saved" && <span>☁️ Saved</span>}
+            {syncStatus==="synced" && <span>☁️ Synced</span>}
+            {syncStatus==="error" && <span>⚠️ Offline</span>}
+          </div>
           {page==="detail" && active && <>
             <button onClick={()=>{setForm({...active});setPage("edit-contract");}} style={btnO}>Edit</button>
             <button onClick={()=>{setPage("new-item");setForm({type:"Expense"});}} style={btnG}>+ Entry</button>
