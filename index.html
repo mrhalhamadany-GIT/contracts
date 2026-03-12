@@ -330,11 +330,11 @@ function mergeDefaults(d){
   DEFAULTS.forEach(def=>{if(!r.find(c=>c.id===def.id))r=[def,...r];});
   return r;
 }
-const TYPES=["Revenue","Expense","Salary","Cash","Materials","Transport","Other"];
-const INCOME_TYPES=["Revenue","Cash"];
+const TYPES=["Revenue","Payment","Expense","Salary","Cash","Materials","Transport","Other"];
+const INCOME_TYPES=["Revenue","Payment","Cash"];
 const TC={
   Revenue:{bg:"rgba(52,211,153,0.12)",c:"#34d399",dot:"#34d399",icon:"↑"},
-
+  Payment:{bg:"rgba(129,140,248,0.12)",c:"#818cf8",dot:"#818cf8",icon:"⊕"},
   Expense:{bg:"rgba(248,113,113,0.12)",c:"#f87171",dot:"#f87171",icon:"↓"},
   Salary:{bg:"rgba(251,191,36,0.12)",c:"#fbbf24",dot:"#fbbf24",icon:"◎"},
   Cash:{bg:"rgba(34,211,238,0.12)",c:"#22d3ee",dot:"#22d3ee",icon:"◈"},
