@@ -350,6 +350,7 @@ const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2);
 const today=()=>new Date().toISOString().slice(0,10);
 const fmtDate=d=>{if(!d)return"—";try{return new Date(d+"T00:00:00").toLocaleDateString("en-AE",{day:"numeric",month:"short",year:"numeric"});}catch{return d;}};
 const isIncome=t=>INCOME_TYPES.includes(t);
+const isPayment=t=>t==="Payment";
 
 // ── ANIMATED NUMBER ───────────────────────────────────────────────────────────
 function AnimNum({value,color}){
@@ -684,7 +685,7 @@ function CashFlowChart({contracts}){
       const d=new Date(i.date+"T00:00:00");
       const k=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`;
       if(!map[k])map[k]={inc:0,exp:0};
-      if(isIncome(i.type))map[k].inc+=i.amount;else map[k].exp+=i.amount;
+      if(isIncome(i.type)||isPayment(i.type))map[k].inc+=i.amount;else map[k].exp+=i.amount;
     }));
     const keys=Object.keys(map).sort();
     if(!keys.length)return;
@@ -706,7 +707,7 @@ function CostDonutChart({contracts}){
   useEffect(()=>{
     if(!ref.current||typeof Chart==="undefined")return;
     const byType={};
-    contracts.forEach(c=>c.items.filter(i=>!isIncome(i.type)).forEach(i=>{byType[i.type]=(byType[i.type]||0)+i.amount;}));
+    contracts.forEach(c=>c.items.filter(i=>!isIncome(i.type)&&!isPayment(i.type)).forEach(i=>{byType[i.type]=(byType[i.type]||0)+i.amount;}));
     const labels=Object.keys(byType);const data=Object.values(byType);
     if(!labels.length)return;
     if(chartRef.current)chartRef.current.destroy();
@@ -760,7 +761,7 @@ function HomePage({contracts,totalPortfolio,totalNet,ro,openC,openModal}){
     <div className="cards-grid" style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(272px,1fr))",gap:14}}>
       {contracts.map((c,i)=>{
         const cR=c.items.filter(x=>isIncome(x.type)).reduce((s,x)=>s+x.amount,0);
-        const cE=c.items.filter(x=>!isIncome(x.type)).reduce((s,x)=>s+x.amount,0);
+        const cE=c.items.filter(x=>!isIncome(x.type)&&!isPayment(x.type)).reduce((s,x)=>s+x.amount,0);
         const cN=c.value+cR-cE;
         const spent=c.value>0?Math.min(100,(cE/c.value)*100):0;
         return <div key={c.id} className="icard" onClick={()=>openC(c.id)}
@@ -828,11 +829,11 @@ function DashboardPage({contracts,totalPortfolio,totalNet,auditLog,setAuditLog,r
     auditWrite(filtered); // sync globally
   }
   const totalRev=contracts.reduce((s,c)=>s+c.items.filter(i=>isIncome(i.type)).reduce((a,i)=>a+i.amount,0),0);
-  const totalCosts=contracts.reduce((s,c)=>s+c.items.filter(i=>!isIncome(i.type)).reduce((a,i)=>a+i.amount,0),0);
+  const totalCosts=contracts.reduce((s,c)=>s+c.items.filter(i=>!isIncome(i.type)&&!isPayment(i.type)).reduce((a,i)=>a+i.amount,0),0);
   const overallMargin=totalPortfolio>0?((totalNet/totalPortfolio)*100).toFixed(1):"0";
-  const costByType=TYPES.filter(t=>!isIncome(t)).map(t=>({type:t,amount:contracts.reduce((s,c)=>s+c.items.filter(i=>i.type===t).reduce((a,i)=>a+i.amount,0),0)})).filter(x=>x.amount>0).sort((a,b)=>b.amount-a.amount);
+  const costByType=TYPES.filter(t=>!isIncome(t)&&!isPayment(t)).map(t=>({type:t,amount:contracts.reduce((s,c)=>s+c.items.filter(i=>i.type===t).reduce((a,i)=>a+i.amount,0),0)})).filter(x=>x.amount>0).sort((a,b)=>b.amount-a.amount);
   const maxCost=Math.max(...costByType.map(x=>x.amount),1);
-  function cNet(c){const r=c.items.filter(i=>isIncome(i.type)).reduce((s,i)=>s+i.amount,0);const e=c.items.filter(i=>!isIncome(i.type)).reduce((s,i)=>s+i.amount,0);return c.value+r-e;}
+  function cNet(c){const r=c.items.filter(i=>isIncome(i.type)).reduce((s,i)=>s+i.amount,0);const e=c.items.filter(i=>!isIncome(i.type)&&!isPayment(i.type)).reduce((s,i)=>s+i.amount,0);return c.value+r-e;}
   const sortedC=[...contracts].sort((a,b)=>b.value-a.value);
   const profitable=contracts.filter(c=>cNet(c)>=0).length;
   const healthPct=contracts.length>0?Math.round((profitable/contracts.length)*100):100;
@@ -913,7 +914,7 @@ function DashboardPage({contracts,totalPortfolio,totalNet,auditLog,setAuditLog,r
             :<div style={{display:"flex",flexDirection:"column",gap:20}}>
               {sortedC.map(c=>{
                 const n=cNet(c);
-                const costs=c.items.filter(i=>!isIncome(i.type)).reduce((s,i)=>s+i.amount,0);
+                const costs=c.items.filter(i=>!isIncome(i.type)&&!isPayment(i.type)).reduce((s,i)=>s+i.amount,0);
                 const pct=c.value>0?Math.min(100,(costs/c.value)*100):0;
                 const barColor=pct>80?"linear-gradient(90deg,#f59e0b,#f87171)":pct>50?"linear-gradient(90deg,#d97706,#fbbf24)":"linear-gradient(90deg,#92400e,#f59e0b)";
                 return(
@@ -1065,7 +1066,7 @@ function DashboardPage({contracts,totalPortfolio,totalNet,auditLog,setAuditLog,r
   );
 }
 
-function DetailPage({active,rev,exp,sal,mat,oth,totalCost,net,margin,ro,filteredItems,search,setSearch,filter,setFilter,onBack,openModal,delItem,exportOnePDF,aiText,aiLoad,genAI}){
+function DetailPage({active,rev,exp,sal,mat,oth,paid,totalCost,net,margin,ro,filteredItems,search,setSearch,filter,setFilter,onBack,openModal,delItem,exportOnePDF,aiText,aiLoad,genAI}){
   if(!active)return null;
   const [datePreset,setDatePreset]=useState("all");
   const [dateFrom,setDateFrom]=useState("");
@@ -1092,7 +1093,7 @@ function DetailPage({active,rev,exp,sal,mat,oth,totalCost,net,margin,ro,filtered
 
   // Stats for filtered period
   const fRev=dateItems.filter(i=>isIncome(i.type)).reduce((s,i)=>s+i.amount,0);
-  const fCost=dateItems.filter(i=>!isIncome(i.type)).reduce((s,i)=>s+i.amount,0);
+  const fCost=dateItems.filter(i=>!isIncome(i.type)&&!isPayment(i.type)).reduce((s,i)=>s+i.amount,0);
   const fNet=(datePreset==="all"&&!dateFrom&&!dateTo)?net:active.value+fRev-fCost;
   const isFiltered=datePreset!=="all"||dateFrom||dateTo;
 
@@ -1147,6 +1148,7 @@ function DetailPage({active,rev,exp,sal,mat,oth,totalCost,net,margin,ro,filtered
     <div className="stats-row" style={{display:"flex",gap:10,marginBottom:12,flexWrap:"nowrap",overflowX:"auto",paddingBottom:2}}>
       <Stat label="Contract Value" value={active.value} color="#fbbf24" icon="◇"/>
       <Stat label="Revenue +" value={rev} color="#34d399" icon="↑"/>
+      {paid>0&&<Stat label="Payments ⊕" value={paid} color="#818cf8" icon="⊕"/>}
       <Stat label="Expenses −" value={exp} color="#f87171" icon="↓"/>
       <Stat label="Salaries −" value={sal} color="#fbbf24" icon="◎"/>
       <Stat label="Net Balance" value={net} color={net>=0?"#34d399":"#f87171"} sub={`${margin}% margin`} icon="◈"/>
@@ -1231,7 +1233,7 @@ function DetailPage({active,rev,exp,sal,mat,oth,totalCost,net,margin,ro,filtered
           :<div>
             {monthGroups.map(([mk,{label,items:mItems}])=>{
               const mInc=mItems.filter(i=>isIncome(i.type)).reduce((s,i)=>s+i.amount,0);
-              const mExp=mItems.filter(i=>!isIncome(i.type)).reduce((s,i)=>s+i.amount,0);
+              const mExp=mItems.filter(i=>!isIncome(i.type)&&!isPayment(i.type)).reduce((s,i)=>s+i.amount,0);
               const mNet=mInc-mExp;
               const open=!collapsed[mk];
               return <div key={mk} style={{marginBottom:4}}>
@@ -1258,8 +1260,8 @@ function DetailPage({active,rev,exp,sal,mat,oth,totalCost,net,margin,ro,filtered
                           {item.entryFile&&<a href={item.entryFile.url} target="_blank" rel="noopener noreferrer" style={{fontSize:10,color:"var(--a3)",display:"inline-flex",alignItems:"center",gap:3,marginTop:4,textDecoration:"none",fontWeight:600}}>📎 View Bill</a>}
                         </td>
                         <td style={{fontSize:11,color:"var(--t3)",whiteSpace:"nowrap"}}>{fmtDate(item.date)}</td>
-                        <td style={{fontSize:13,fontWeight:700,whiteSpace:"nowrap",fontVariantNumeric:"tabular-nums",color:isIncome(item.type)?"#34d399":"#f87171"}}>
-                          {isIncome(item.type)?"+":"−"}{fmt(item.amount)}
+                        <td style={{fontSize:13,fontWeight:700,whiteSpace:"nowrap",fontVariantNumeric:"tabular-nums",color:isIncome(item.type)?"#34d399":isPayment(item.type)?"#818cf8":"#f87171"}}>
+                          {isIncome(item.type)||isPayment(item.type)?"+":"−"}{fmt(item.amount)}
                         </td>
                         <td style={{width:72}}>{!ro&&<div className="row-actions" style={{display:"flex",gap:4,justifyContent:"flex-end"}}>
                           <button className="btn-icon" title="Edit" onClick={()=>openModal("edit-item",{...item})} style={{color:"var(--t4)",fontSize:13}} onMouseEnter={e=>e.currentTarget.style.color="var(--a3)"} onMouseLeave={e=>e.currentTarget.style.color="var(--t4)"}>✎</button>
@@ -1519,7 +1521,8 @@ function AppMain({user,onLogout}){
     const fmtN=n=>"AED "+Number(n||0).toLocaleString("en",{minimumFractionDigits:2,maximumFractionDigits:2});
     const fmtD=d=>{try{return new Date(d+"T00:00:00").toLocaleDateString("en-AE",{day:"numeric",month:"short",year:"numeric"});}catch{return d||"—";}};
     const cRev=c.items.filter(i=>isIncome(i.type)).reduce((s,i)=>s+i.amount,0);
-    const cCost=c.items.filter(i=>!isIncome(i.type)).reduce((s,i)=>s+i.amount,0);
+    const cCost=c.items.filter(i=>!isIncome(i.type)&&!isPayment(i.type)).reduce((s,i)=>s+i.amount,0);
+    const cPaid=c.items.filter(i=>isPayment(i.type)).reduce((s,i)=>s+i.amount,0);
     const cNet=c.value+cRev-cCost;
     const cMargin=c.value>0?((cNet/c.value)*100).toFixed(1):"0";
 
@@ -1540,6 +1543,7 @@ function AppMain({user,onLogout}){
       body:[
         ["Contract Value",fmtN(c.value)],
         ["Revenue Received",fmtN(cRev)],
+        ["Payments Received",fmtN(cPaid)],
         ["Total Costs",fmtN(cCost)],
         ["Net Balance",(cNet>=0?"+":"")+fmtN(cNet)],
         ["Margin",cMargin+"%"],
@@ -1559,7 +1563,7 @@ function AppMain({user,onLogout}){
       head:[["Date","Type","Description","Amount","Note"]],
       body:c.items.slice().sort((a,b)=>new Date(b.date||0)-new Date(a.date||0)).map(i=>[
         fmtD(i.date),i.type,i.desc,
-        (isIncome(i.type)?"+":"−")+fmtN(i.amount),
+        (isIncome(i.type)||isPayment(i.type)?"+":"−")+fmtN(i.amount),
         i.note||"—"
       ]),
       headStyles:{fillColor:[15,10,5],textColor:[251,191,36],fontStyle:"bold",fontSize:8},
@@ -1591,7 +1595,8 @@ function AppMain({user,onLogout}){
     contracts.forEach((c,idx)=>{
       if(idx>0)doc.addPage();
       const cRev=c.items.filter(i=>isIncome(i.type)).reduce((s,i)=>s+i.amount,0);
-      const cCost=c.items.filter(i=>!isIncome(i.type)).reduce((s,i)=>s+i.amount,0);
+      const cCost=c.items.filter(i=>!isIncome(i.type)&&!isPayment(i.type)).reduce((s,i)=>s+i.amount,0);
+      const cPaid=c.items.filter(i=>isPayment(i.type)).reduce((s,i)=>s+i.amount,0);
       const cNet=c.value+cRev-cCost;
       const cMargin=c.value>0?((cNet/c.value)*100).toFixed(1):"0";
       // Header bar
@@ -1612,6 +1617,7 @@ function AppMain({user,onLogout}){
         body:[
           ["Contract Value",fmtN(c.value)],
           ["Revenue Received",fmtN(cRev)],
+          ["Payments Received",fmtN(cPaid)],
           ["Total Costs",fmtN(cCost)],
           ["Net Balance",(cNet>=0?"+":"")+fmtN(cNet)],
           ["Margin",cMargin+"%"],
@@ -1630,7 +1636,7 @@ function AppMain({user,onLogout}){
         head:[["Date","Type","Description","Amount","Note"]],
         body:c.items.slice().sort((a,b)=>new Date(b.date||0)-new Date(a.date||0)).map(i=>[
           fmtD(i.date),i.type,i.desc,
-          (isIncome(i.type)?"+":"−")+fmtN(i.amount),
+          (isIncome(i.type)||isPayment(i.type)?"+":"−")+fmtN(i.amount),
           i.note||"—"
         ]),
         headStyles:{fillColor:[15,10,5],textColor:[251,191,36],fontStyle:"bold",fontSize:8},
@@ -1684,14 +1690,15 @@ function AppMain({user,onLogout}){
   async function genAI(){
     if(!active)return;setAiLoad(true);setAiText("");
     const aRev=active.items.filter(i=>isIncome(i.type)).reduce((s,i)=>s+i.amount,0);
-    const aCosts=active.items.filter(i=>!isIncome(i.type)).reduce((s,i)=>s+i.amount,0);
+    const aCosts=active.items.filter(i=>!isIncome(i.type)&&!isPayment(i.type)).reduce((s,i)=>s+i.amount,0);
+    const aPaid=active.items.filter(i=>isPayment(i.type)).reduce((s,i)=>s+i.amount,0);
     const aNet=active.value+aRev-aCosts;
-    const breakdown=TYPES.filter(t=>!isIncome(t)).map(t=>{const sum=active.items.filter(i=>i.type===t).reduce((s,i)=>s+i.amount,0);return sum>0?`${t}: AED ${sum.toFixed(2)}`:""}).filter(Boolean).join(", ");
+    const breakdown=TYPES.filter(t=>!isIncome(t)&&!isPayment(t)).map(t=>{const sum=active.items.filter(i=>i.type===t).reduce((s,i)=>s+i.amount,0);return sum>0?`${t}: AED ${sum.toFixed(2)}`:""}).filter(Boolean).join(", ");
     try{
       const res=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",
         headers:{"Content-Type":"application/json","x-api-key":"","anthropic-version":"2023-06-01"},
         body:JSON.stringify({model:"claude-haiku-4-5-20251001",max_tokens:900,
-          messages:[{role:"user",content:`You are a professional construction contract accountant. Provide a concise financial analysis in 3 short paragraphs labeled "Financial Health", "Key Risks", and "Recommendations". Be specific to the numbers.\n\nContract: ${active.name}\nClient: ${active.client||"N/A"}\nContract Value: AED ${active.value.toFixed(2)}\nRevenue Received: AED ${aRev.toFixed(2)}\nTotal Costs: AED ${aCosts.toFixed(2)}\nNet Balance: AED ${aNet.toFixed(2)}\nMargin: ${active.value>0?((aNet/active.value)*100).toFixed(1):"N/A"}%\nCost Breakdown: ${breakdown||"None"}\nRecent Entries: ${active.items.slice(-5).map(i=>`[${i.type}] ${i.desc}: AED ${i.amount}`).join(", ")||"None"}`}]})});
+          messages:[{role:"user",content:`You are a professional construction contract accountant. Provide a concise financial analysis in 3 short paragraphs labeled "Financial Health", "Key Risks", and "Recommendations". Be specific to the numbers.\n\nContract: ${active.name}\nClient: ${active.client||"N/A"}\nContract Value: AED ${active.value.toFixed(2)}\nRevenue Received: AED ${aRev.toFixed(2)}\nPayments Received: AED ${aPaid.toFixed(2)}\nTotal Costs: AED ${aCosts.toFixed(2)}\nNet Balance: AED ${aNet.toFixed(2)}\nMargin: ${active.value>0?((aNet/active.value)*100).toFixed(1):"N/A"}%\nCost Breakdown: ${breakdown||"None"}\nRecent Entries: ${active.items.slice(-5).map(i=>`[${i.type}] ${i.desc}: AED ${i.amount}`).join(", ")||"None"}`}]})});
       if(!res.ok){const d=await res.json().catch(()=>({}));setAiText("AI unavailable: "+(d.error?.message||`HTTP ${res.status}`));}
       else{const d=await res.json();setAiText(d.content?.[0]?.text||"No response.");}
     }catch{setAiText("Unable to connect. Please check your API key configuration.");}
@@ -1703,14 +1710,15 @@ function AppMain({user,onLogout}){
   const exp=active?.items.filter(i=>i.type==="Expense").reduce((s,i)=>s+i.amount,0)||0;
   const sal=active?.items.filter(i=>i.type==="Salary").reduce((s,i)=>s+i.amount,0)||0;
   const mat=active?.items.filter(i=>i.type==="Materials").reduce((s,i)=>s+i.amount,0)||0;
-  const oth=active?.items.filter(i=>!isIncome(i.type)&&!["Expense","Salary","Materials"].includes(i.type)).reduce((s,i)=>s+i.amount,0)||0;
+  const oth=active?.items.filter(i=>!isIncome(i.type)&&!isPayment(i.type)&&!["Expense","Salary","Materials"].includes(i.type)).reduce((s,i)=>s+i.amount,0)||0;
+  const paid=active?.items.filter(i=>isPayment(i.type)).reduce((s,i)=>s+i.amount,0)||0;
   const totalCost=exp+sal+mat+oth;
   const net=(active?.value||0)+rev-totalCost;
   const margin=active?.value>0?((net/active.value)*100).toFixed(1):"0";
   const totalPortfolio=contracts.reduce((s,c)=>s+c.value,0);
   const totalNet=contracts.reduce((acc,c)=>{
     const r=c.items.filter(i=>isIncome(i.type)).reduce((s,i)=>s+i.amount,0);
-    const e=c.items.filter(i=>!isIncome(i.type)).reduce((s,i)=>s+i.amount,0);
+    const e=c.items.filter(i=>!isIncome(i.type)&&!isPayment(i.type)).reduce((s,i)=>s+i.amount,0);
     return acc+c.value+r-e;
   },0);
 
@@ -1791,7 +1799,7 @@ function AppMain({user,onLogout}){
         contracts={contracts} totalPortfolio={totalPortfolio} totalNet={totalNet}
         ro={ro} openC={openC} openModal={openModal}/>}
       {page==="detail"&&active&&<DetailPage key={activeId}
-        active={active} rev={rev} exp={exp} sal={sal} mat={mat} oth={oth}
+        active={active} rev={rev} exp={exp} sal={sal} mat={mat} oth={oth} paid={paid}
         totalCost={totalCost} net={net} margin={margin} ro={ro}
         filteredItems={filteredItems} search={search} setSearch={setSearch}
         filter={filter} setFilter={setFilter}
