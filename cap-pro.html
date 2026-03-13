@@ -350,7 +350,6 @@ const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2);
 const today=()=>new Date().toISOString().slice(0,10);
 const fmtDate=d=>{if(!d)return"—";try{return new Date(d+"T00:00:00").toLocaleDateString("en-AE",{day:"numeric",month:"short",year:"numeric"});}catch{return d;}};
 const isIncome=t=>INCOME_TYPES.includes(t);
-const isPayment=t=>t==="Payment";
 
 // ── ANIMATED NUMBER ───────────────────────────────────────────────────────────
 function AnimNum({value,color}){
@@ -646,6 +645,49 @@ function ItemModal({modal,activeName,form,setForm,errors,onSave,onClose,ro,activ
     <div style={{display:"flex",gap:10}}>
       <RippleBtn className="btn-p" onClick={onSave} style={{flex:1,padding:"13px"}}>
         {isEdit?"Save Changes":"Save Entry"}
+      </RippleBtn>
+      <button className="btn-g" onClick={onClose} style={{padding:"13px 22px"}}>Cancel</button>
+    </div>
+  </div>;
+}
+
+function PaymentModal({modal,activeName,form,setForm,errors,onSave,onClose}){
+  const isEdit=modal==="edit-payment";
+  return <div className="modal-card" style={{maxWidth:460,maxHeight:"92vh"}}>
+    <div className="modal-top"/>
+    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
+      <div>
+        <h2 style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:21,fontWeight:700,color:"var(--t1)",letterSpacing:"-0.02em"}}>
+          {isEdit?"Edit Payment":"Record Payment"}
+        </h2>
+        <p style={{fontSize:11,color:"var(--t3)",marginTop:3}}>{activeName}</p>
+      </div>
+      <CloseBtn onClick={onClose}/>
+    </div>
+    <div className="divider"/>
+    <div style={{background:"rgba(129,140,248,0.07)",border:"1px solid rgba(129,140,248,0.18)",borderRadius:10,padding:"10px 14px",marginBottom:18,fontSize:11,color:"#818cf8"}}>
+      ⊕ Payments are recorded separately and do not affect the contract net balance.
+    </div>
+    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14,marginBottom:14}} className="form-2col">
+      <div>
+        <label className="lbl">Amount (AED) <span className="req">*</span></label>
+        <input type="number" min="0" step="0.01" className={"inp"+(errors.amount?" error":"")}
+          value={form.amount||""} onChange={e=>setForm(f=>({...f,amount:e.target.value}))} placeholder="0.00"/>
+      </div>
+      <div>
+        <label className="lbl">Date <span className="req">*</span></label>
+        <input type="date" className={"inp"+(errors.date?" error":"")}
+          value={form.date||today()} onChange={e=>setForm(f=>({...f,date:e.target.value}))}/>
+      </div>
+    </div>
+    <div style={{marginBottom:22}}>
+      <label className="lbl">Description <span className="req">*</span></label>
+      <input className={"inp"+(errors.desc?" error":"")} value={form.desc||""}
+        onChange={e=>setForm(f=>({...f,desc:e.target.value}))} placeholder="e.g. Client payment – Invoice #3"/>
+    </div>
+    <div style={{display:"flex",gap:10}}>
+      <RippleBtn className="btn-p" onClick={onSave} style={{flex:1,padding:"13px"}}>
+        {isEdit?"Save Changes":"Record Payment"}
       </RippleBtn>
       <button className="btn-g" onClick={onClose} style={{padding:"13px 22px"}}>Cancel</button>
     </div>
@@ -1066,7 +1108,7 @@ function DashboardPage({contracts,totalPortfolio,totalNet,auditLog,setAuditLog,r
   );
 }
 
-function DetailPage({active,rev,exp,sal,mat,oth,paid,totalCost,net,margin,ro,filteredItems,search,setSearch,filter,setFilter,onBack,openModal,delItem,exportOnePDF,aiText,aiLoad,genAI}){
+function DetailPage({active,rev,exp,sal,mat,oth,totalCost,net,margin,ro,filteredItems,search,setSearch,filter,setFilter,onBack,openModal,delItem,exportOnePDF,aiText,aiLoad,genAI,openPayModal,delPayment}){
   if(!active)return null;
   const [datePreset,setDatePreset]=useState("all");
   const [dateFrom,setDateFrom]=useState("");
@@ -1259,8 +1301,8 @@ function DetailPage({active,rev,exp,sal,mat,oth,paid,totalCost,net,margin,ro,fil
                           {item.entryFile&&<a href={item.entryFile.url} target="_blank" rel="noopener noreferrer" style={{fontSize:10,color:"var(--a3)",display:"inline-flex",alignItems:"center",gap:3,marginTop:4,textDecoration:"none",fontWeight:600}}>📎 View Bill</a>}
                         </td>
                         <td style={{fontSize:11,color:"var(--t3)",whiteSpace:"nowrap"}}>{fmtDate(item.date)}</td>
-                        <td style={{fontSize:13,fontWeight:700,whiteSpace:"nowrap",fontVariantNumeric:"tabular-nums",color:isIncome(item.type)?"#34d399":isPayment(item.type)?"#818cf8":"#f87171"}}>
-                          {isIncome(item.type)||isPayment(item.type)?"+":"−"}{fmt(item.amount)}
+                        <td style={{fontSize:13,fontWeight:700,whiteSpace:"nowrap",fontVariantNumeric:"tabular-nums",color:isIncome(item.type)?"#34d399":"#f87171"}}>
+                          {isIncome(item.type)?"+":"−"}{fmt(item.amount)}
                         </td>
                         <td style={{width:72}}>{!ro&&<div className="row-actions" style={{display:"flex",gap:4,justifyContent:"flex-end"}}>
                           <button className="btn-icon" title="Edit" onClick={()=>openModal("edit-item",{...item})} style={{color:"var(--t4)",fontSize:13}} onMouseEnter={e=>e.currentTarget.style.color="var(--a3)"} onMouseLeave={e=>e.currentTarget.style.color="var(--t4)"}>✎</button>
@@ -1273,6 +1315,51 @@ function DetailPage({active,rev,exp,sal,mat,oth,paid,totalCost,net,margin,ro,fil
               </div>;
             })}
           </div>}
+    </div>
+
+    {/* Payments Received */}
+    <div className="sect" style={{marginBottom:12}}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16,flexWrap:"wrap",gap:10}}>
+        <div>
+          <h3 style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:15,fontWeight:600,color:"var(--t2)"}}>
+            Payments Received <span style={{fontSize:12,color:"var(--t4)",fontWeight:400}}>({(active.payments||[]).length})</span>
+          </h3>
+          <div style={{fontSize:11,color:"#818cf8",marginTop:3}}>Recorded separately — not included in net balance or calculations</div>
+        </div>
+        {!ro&&<RippleBtn className="btn-p" style={{fontSize:12,padding:"9px 16px",background:"linear-gradient(145deg,#3730a3,#4338ca,#6366f1)",boxShadow:"0 4px 16px rgba(99,102,241,0.35)"}} onClick={()=>openPayModal("new-payment",{date:today()})}>⊕ Record Payment</RippleBtn>}
+      </div>
+      {(active.payments||[]).length===0
+        ?<div className="empty-state">
+          <div className="empty-icon" style={{color:"#818cf8"}}>⊕</div>
+          <div style={{fontSize:13,fontWeight:600,color:"var(--t3)",marginBottom:6}}>No payments recorded</div>
+          <div style={{fontSize:12,color:"var(--t4)",lineHeight:1.6}}>Record client payments here — they won't affect the contract balance</div>
+          {!ro&&<RippleBtn className="btn-p" style={{marginTop:16,fontSize:12,padding:"10px 22px",background:"linear-gradient(145deg,#3730a3,#4338ca,#6366f1)",boxShadow:"0 4px 16px rgba(99,102,241,0.35)"}} onClick={()=>openPayModal("new-payment",{date:today()})}>Record First Payment</RippleBtn>}
+        </div>
+        :<>
+          <div style={{background:"rgba(129,140,248,0.08)",border:"1px solid rgba(129,140,248,0.2)",borderRadius:12,padding:"12px 18px",marginBottom:14,display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+            <span style={{fontSize:12,color:"var(--t3)",fontWeight:600}}>Total Payments Received</span>
+            <span style={{fontSize:17,fontWeight:800,color:"#818cf8",fontVariantNumeric:"tabular-nums"}}>{fmt((active.payments||[]).reduce((s,p)=>s+p.amount,0))}</span>
+          </div>
+          <div style={{overflowX:"auto"}}>
+            <table style={{minWidth:400}}>
+              <thead><tr>{["Date","Description","Amount",""].map(h=><th key={h}>{h}</th>)}</tr></thead>
+              <tbody>
+                {(active.payments||[]).slice().sort((a,b)=>new Date(b.date||0)-new Date(a.date||0)).map((pay,i)=>(
+                  <tr key={pay.id} className="trow" style={{animation:`slideRight 0.18s ease ${Math.min(i*0.025,0.15)}s both`}}>
+                    <td style={{fontSize:11,color:"var(--t3)",whiteSpace:"nowrap"}}>{fmtDate(pay.date)}</td>
+                    <td><div style={{fontSize:13,color:"var(--t1)",fontWeight:500}}>{pay.desc}</div></td>
+                    <td style={{fontSize:13,fontWeight:700,whiteSpace:"nowrap",fontVariantNumeric:"tabular-nums",color:"#818cf8"}}>+{fmt(pay.amount)}</td>
+                    <td style={{width:72}}>{!ro&&<div className="row-actions" style={{display:"flex",gap:4,justifyContent:"flex-end"}}>
+                      <button className="btn-icon" title="Edit" onClick={()=>openPayModal("edit-payment",{...pay})} style={{color:"var(--t4)",fontSize:13}} onMouseEnter={e=>e.currentTarget.style.color="var(--a3)"} onMouseLeave={e=>e.currentTarget.style.color="var(--t4)"}>✎</button>
+                      <button className="btn-icon" title="Delete" onClick={()=>delPayment(pay.id)} style={{color:"var(--t4)",fontSize:14}} onMouseEnter={e=>e.currentTarget.style.color="var(--neg)"} onMouseLeave={e=>e.currentTarget.style.color="var(--t4)"}>✕</button>
+                    </div>}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
+      }
     </div>
 
     {/* AI Report */}
@@ -1458,7 +1545,7 @@ function AppMain({user,onLogout}){
       upd=contracts.map(c=>c.id===form.id?{...c,...form,value:parseFloat(form.value)||0}:c);
       addAudit("Contract Updated",form.name,form.id,`Value: AED ${(parseFloat(form.value)||0).toLocaleString()}`);
     } else {
-      const c={id:form.id||uid(),items:[],...form,value:parseFloat(form.value)||0};
+      const c={id:form.id||uid(),items:[],payments:[],...form,value:parseFloat(form.value)||0};
       upd=[...contracts,c];setActiveId(c.id);setPage("detail");
       addAudit("Contract Created",form.name,c.id,`Value: AED ${(parseFloat(form.value)||0).toLocaleString()}`);
     }
@@ -1500,6 +1587,28 @@ function AppMain({user,onLogout}){
     save(contracts.map(c=>c.id===activeId?{...c,items:c.items.filter(i=>i.id!==iid)}:c),"Entry deleted");
     addAudit("Entry Deleted",active?.name||"",activeId,item?`[${item.type}] ${item.desc}: AED ${item.amount.toLocaleString()}`:"");
   }
+  function savePayment(){
+    if(!validate(["amount","date","desc"]))return;
+    const payData={desc:form.desc.trim(),amount:Math.abs(parseFloat(form.amount)),date:form.date};
+    let upd;
+    const existingPay=active?.payments?.find(p=>p.id===form.id);
+    if(form.id&&existingPay){
+      upd=contracts.map(c=>c.id===activeId?{...c,payments:(c.payments||[]).map(p=>p.id===form.id?{...p,...payData}:p)}:c);
+      save(upd,"Payment updated");
+      addAudit("Payment Updated",active?.name||"",activeId,`${form.desc.trim()}: AED ${Math.abs(parseFloat(form.amount)).toLocaleString()}`);
+    } else {
+      const pay={id:uid(),...payData};
+      upd=contracts.map(c=>c.id===activeId?{...c,payments:[...(c.payments||[]),pay]}:c);
+      save(upd,"Payment recorded");
+      addAudit("Payment Added",active?.name||"",activeId,`${form.desc.trim()}: AED ${Math.abs(parseFloat(form.amount)).toLocaleString()}`);
+    }
+    closeModal();
+  }
+  function delPayment(pid){
+    const pay=active?.payments?.find(p=>p.id===pid);
+    save(contracts.map(c=>c.id===activeId?{...c,payments:(c.payments||[]).filter(p=>p.id!==pid)}:c),"Payment deleted");
+    addAudit("Payment Deleted",active?.name||"",activeId,pay?`${pay.desc}: AED ${pay.amount.toLocaleString()}`:"");
+  }
   function delContract(id){
     const c=contracts.find(x=>x.id===id);
     save(contracts.filter(x=>x.id!==id),"Contract deleted");
@@ -1521,7 +1630,7 @@ function AppMain({user,onLogout}){
     const fmtD=d=>{try{return new Date(d+"T00:00:00").toLocaleDateString("en-AE",{day:"numeric",month:"short",year:"numeric"});}catch{return d||"—";}};
     const cRev=c.items.filter(i=>["Revenue","Cash"].includes(i.type)).reduce((s,i)=>s+i.amount,0);
     const cCost=c.items.filter(i=>["Expense","Salary","Materials","Transport","Other"].includes(i.type)).reduce((s,i)=>s+i.amount,0);
-    const cPaid=c.items.filter(i=>i.type==="Payment").reduce((s,i)=>s+i.amount,0);
+    const cPaid=(c.payments||[]).reduce((s,p)=>s+p.amount,0);
     const cNet=c.value+cRev-cCost;
     const cMargin=c.value>0?((cNet/c.value)*100).toFixed(1):"0";
 
@@ -1562,7 +1671,7 @@ function AppMain({user,onLogout}){
       head:[["Date","Type","Description","Amount","Note"]],
       body:c.items.slice().sort((a,b)=>new Date(b.date||0)-new Date(a.date||0)).map(i=>[
         fmtD(i.date),i.type,i.desc,
-        (isIncome(i.type)||isPayment(i.type)?"+":"−")+fmtN(i.amount),
+        (isIncome(i.type)?"+":"−")+fmtN(i.amount),
         i.note||"—"
       ]),
       headStyles:{fillColor:[15,10,5],textColor:[251,191,36],fontStyle:"bold",fontSize:8},
@@ -1595,7 +1704,7 @@ function AppMain({user,onLogout}){
       if(idx>0)doc.addPage();
       const cRev=c.items.filter(i=>["Revenue","Cash"].includes(i.type)).reduce((s,i)=>s+i.amount,0);
       const cCost=c.items.filter(i=>["Expense","Salary","Materials","Transport","Other"].includes(i.type)).reduce((s,i)=>s+i.amount,0);
-      const cPaid=c.items.filter(i=>i.type==="Payment").reduce((s,i)=>s+i.amount,0);
+      const cPaid=(c.payments||[]).reduce((s,p)=>s+p.amount,0);
       const cNet=c.value+cRev-cCost;
       const cMargin=c.value>0?((cNet/c.value)*100).toFixed(1):"0";
       // Header bar
@@ -1635,7 +1744,7 @@ function AppMain({user,onLogout}){
         head:[["Date","Type","Description","Amount","Note"]],
         body:c.items.slice().sort((a,b)=>new Date(b.date||0)-new Date(a.date||0)).map(i=>[
           fmtD(i.date),i.type,i.desc,
-          (isIncome(i.type)||isPayment(i.type)?"+":"−")+fmtN(i.amount),
+          (isIncome(i.type)?"+":"−")+fmtN(i.amount),
           i.note||"—"
         ]),
         headStyles:{fillColor:[15,10,5],textColor:[251,191,36],fontStyle:"bold",fontSize:8},
@@ -1690,7 +1799,7 @@ function AppMain({user,onLogout}){
     if(!active)return;setAiLoad(true);setAiText("");
     const aRev=active.items.filter(i=>["Revenue","Cash"].includes(i.type)).reduce((s,i)=>s+i.amount,0);
     const aCosts=active.items.filter(i=>["Expense","Salary","Materials","Transport","Other"].includes(i.type)).reduce((s,i)=>s+i.amount,0);
-    const aPaid=active.items.filter(i=>i.type==="Payment").reduce((s,i)=>s+i.amount,0);
+    const aPaid=(active.payments||[]).reduce((s,p)=>s+p.amount,0);
     const aNet=active.value+aRev-aCosts;
     const breakdown=["Expense","Salary","Materials","Transport","Other"].map(t=>{const sum=active.items.filter(i=>i.type===t).reduce((s,i)=>s+i.amount,0);return sum>0?`${t}: AED ${sum.toFixed(2)}`:""}).filter(Boolean).join(", ");
     try{
@@ -1710,7 +1819,7 @@ function AppMain({user,onLogout}){
   const sal=active?.items.filter(i=>i.type==="Salary").reduce((s,i)=>s+i.amount,0)||0;
   const mat=active?.items.filter(i=>i.type==="Materials").reduce((s,i)=>s+i.amount,0)||0;
   const oth=active?.items.filter(i=>["Transport","Other"].includes(i.type)).reduce((s,i)=>s+i.amount,0)||0;
-  const paid=active?.items.filter(i=>i.type==="Payment").reduce((s,i)=>s+i.amount,0)||0;
+  const paid=(active?.payments||[]).reduce((s,p)=>s+p.amount,0);
   const totalCost=exp+sal+mat+oth;
   const net=(active?.value||0)+rev-totalCost;
   const margin=active?.value>0?((net/active.value)*100).toFixed(1):"0";
@@ -1734,6 +1843,7 @@ function AppMain({user,onLogout}){
   const syncLabel=sync==="loading"?"Syncing":sync==="saving"?"Saving":sync==="ok"?"Live":"Offline";
 
   const isItemModal=modal==="new-item"||modal==="edit-item";
+  const isPayModal=modal==="new-payment"||modal==="edit-payment";
 
   return <div style={{minHeight:"100vh"}}>
     <Toast msg={toast.msg} type={toast.type}/>
@@ -1744,6 +1854,8 @@ function AppMain({user,onLogout}){
         <ContractModal modal={modal} form={form} setForm={setForm} errors={errors} onSave={saveContract} onClose={closeModal} ro={ro}/>}
       {isItemModal&&
         <ItemModal modal={modal} activeName={active?.name} form={form} setForm={setForm} errors={errors} onSave={saveItem} onClose={closeModal} ro={ro} activeContractId={activeId}/>}
+      {isPayModal&&
+        <PaymentModal modal={modal} activeName={active?.name} form={form} setForm={setForm} errors={errors} onSave={savePayment} onClose={closeModal}/>}
       {modal==="delete-confirm"&&
         <DeleteModal name={active?.name} itemCount={active?.items?.length||0} onDelete={()=>delContract(active.id)} onClose={closeModal}/>}
     </div>}
@@ -1798,13 +1910,14 @@ function AppMain({user,onLogout}){
         contracts={contracts} totalPortfolio={totalPortfolio} totalNet={totalNet}
         ro={ro} openC={openC} openModal={openModal}/>}
       {page==="detail"&&active&&<DetailPage key={activeId}
-        active={active} rev={rev} exp={exp} sal={sal} mat={mat} oth={oth} paid={paid}
+        active={active} rev={rev} exp={exp} sal={sal} mat={mat} oth={oth}
         totalCost={totalCost} net={net} margin={margin} ro={ro}
         filteredItems={filteredItems} search={search} setSearch={setSearch}
         filter={filter} setFilter={setFilter}
         onBack={()=>{setPage("home");setActiveId(null);}}
         openModal={openModal} delItem={delItem}
-        exportOnePDF={exportOnePDF} aiText={aiText} aiLoad={aiLoad} genAI={genAI}/>}
+        exportOnePDF={exportOnePDF} aiText={aiText} aiLoad={aiLoad} genAI={genAI}
+        openPayModal={openModal} delPayment={delPayment}/>}
       {page==="dashboard"&&<DashboardPage contracts={contracts} totalPortfolio={totalPortfolio} totalNet={totalNet} auditLog={auditLog} setAuditLog={setAuditLog} ro={ro} exportB={exportB} importB={importB} importOne={importOne} exportAllPDFs={exportAllPDFs}/>}
     </div>
 
