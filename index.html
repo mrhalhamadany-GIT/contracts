@@ -330,6 +330,20 @@ function mergeDefaults(d){
   DEFAULTS.forEach(def=>{if(!r.find(c=>c.id===def.id))r=[def,...r];});
   return r;
 }
+function migratePayments(contracts){
+  let changed=false;
+  const result=contracts.map(c=>{
+    const payItems=c.items.filter(i=>i.type==="Payment");
+    if(!payItems.length)return c;
+    changed=true;
+    return{
+      ...c,
+      items:c.items.filter(i=>i.type!=="Payment"),
+      payments:[...(c.payments||[]),...payItems.map(i=>({id:i.id,desc:i.desc,amount:i.amount,date:i.date}))]
+    };
+  });
+  return{result,changed};
+}
 const TYPES=["Revenue","Expense","Salary","Cash","Materials","Transport","Other"];
 const INCOME_TYPES=["Revenue","Cash"];
 const TC={
@@ -1217,12 +1231,12 @@ function DetailPage({active,rev,exp,sal,mat,oth,totalCost,net,margin,ro,filtered
     <div className="sect" style={{marginBottom:12}}>
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16,flexWrap:"wrap",gap:10}}>
         <h3 style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:15,fontWeight:600,color:"var(--t2)"}}>
-          Entries <span style={{fontSize:12,color:"var(--t4)",fontWeight:400}}>({active.items.length})</span>
+          Entries <span style={{fontSize:12,color:"var(--t4)",fontWeight:400}}>({active.items.filter(i=>i.type!=="Payment").length})</span>
         </h3>
         {!ro&&<RippleBtn className="btn-p" style={{fontSize:12,padding:"9px 16px"}} onClick={()=>openModal("new-item",{date:today()})}>+ Add Entry</RippleBtn>}
       </div>
 
-      {active.items.length>0&&<>
+      {active.items.filter(i=>i.type!=="Payment").length>0&&<>
         {/* Type + Search filters */}
         <div style={{display:"flex",gap:8,marginBottom:10,flexWrap:"wrap"}}>
           <div className="search-wrap" style={{flex:1,minWidth:160}}>
@@ -1260,7 +1274,7 @@ function DetailPage({active,rev,exp,sal,mat,oth,totalCost,net,margin,ro,filtered
         </div>}
       </>}
 
-      {active.items.length===0
+      {active.items.filter(i=>i.type!=="Payment").length===0
         ?<div className="empty-state">
           <div className="empty-icon">◫</div>
           <div style={{fontSize:14,fontWeight:600,color:"var(--t3)",marginBottom:6}}>No entries yet</div>
@@ -1511,10 +1525,27 @@ function AppMain({user,onLogout}){
   useEffect(()=>{
     setSync("loading");
     cloudRead()
-      .then(d=>{if(d)setContracts(mergeDefaults(d));setSync("ok");})
+      .then(d=>{
+        if(d){
+          const {result,changed}=migratePayments(mergeDefaults(d));
+          setContracts(result);
+          if(changed){
+            localStorage.setItem("cap_v1",JSON.stringify(result));
+            cloudWrite(result).catch(()=>{});
+          }
+        }
+        setSync("ok");
+      })
       .catch(()=>{
         setSync("error");
-        try{const l=JSON.parse(localStorage.getItem("cap_v1")||"null");if(l)setContracts(mergeDefaults(l));}catch{}
+        try{
+          const l=JSON.parse(localStorage.getItem("cap_v1")||"null");
+          if(l){
+            const {result,changed}=migratePayments(mergeDefaults(l));
+            setContracts(result);
+            if(changed)localStorage.setItem("cap_v1",JSON.stringify(result));
+          }
+        }catch{}
         showToast("Using offline data","info");
       });
   },[]);
@@ -1830,6 +1861,7 @@ function AppMain({user,onLogout}){
   const filteredItems=useMemo(()=>{
     if(!active)return[];
     return active.items.filter(item=>{
+      if(item.type==="Payment")return false;
       const matchType=filter==="All"||item.type===filter;
       const matchSearch=!search||item.desc.toLowerCase().includes(search.toLowerCase())||item.note?.toLowerCase().includes(search.toLowerCase());
       return matchType&&matchSearch;
@@ -1885,6 +1917,7 @@ function AppMain({user,onLogout}){
         {page==="detail"&&active&&<>
           {!ro&&<button className="btn-g hide-mob" style={{fontSize:12,padding:"8px 16px"}} onClick={()=>openModal("edit-contract",{...active})}>✎ Edit</button>}
           {!ro&&<RippleBtn className="btn-p mob-hide-nav" style={{fontSize:12,padding:"9px 16px"}} onClick={()=>openModal("new-item",{date:today()})}>+ Entry</RippleBtn>}
+          {!ro&&<RippleBtn className="mob-hide-nav" style={{fontSize:12,padding:"9px 16px",background:"linear-gradient(145deg,#3730a3,#4338ca,#6366f1)",boxShadow:"0 4px 16px rgba(99,102,241,0.3)",border:"none",borderRadius:10,color:"#fff",fontWeight:700,cursor:"pointer"}} onClick={()=>openModal("new-payment",{date:today()})}>⊕ Payment</RippleBtn>}
           <button className="btn-g mob-hide-nav" style={{fontSize:12,padding:"8px 14px"}} onClick={()=>{setPage("home");setActiveId(null);}}>← Back</button>
         </>}
         {page==="home"&&!ro&&<RippleBtn className="btn-p hide-mob" style={{fontSize:12,padding:"9px 16px"}} onClick={()=>openModal("new-contract")}>+ New Contract</RippleBtn>}
@@ -1927,6 +1960,9 @@ function AppMain({user,onLogout}){
           </button>
           {!ro&&<button className="mobile-nav-btn primary" onClick={()=>openModal("new-item",{date:today()})}>
             <span className="mn-icon">+</span>Add Entry
+          </button>}
+          {!ro&&<button className="mobile-nav-btn" onClick={()=>openModal("new-payment",{date:today()})}>
+            <span className="mn-icon">⊕</span>Payment
           </button>}
           {!ro&&<button className="mobile-nav-btn" onClick={()=>openModal("edit-contract",{...active})}>
             <span className="mn-icon">✎</span>Edit
