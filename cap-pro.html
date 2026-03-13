@@ -685,7 +685,7 @@ function CashFlowChart({contracts}){
       const d=new Date(i.date+"T00:00:00");
       const k=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`;
       if(!map[k])map[k]={inc:0,exp:0};
-      if(isIncome(i.type)||isPayment(i.type))map[k].inc+=i.amount;else map[k].exp+=i.amount;
+      if(["Revenue","Cash"].includes(i.type))map[k].inc+=i.amount;else if(["Expense","Salary","Materials","Transport","Other"].includes(i.type))map[k].exp+=i.amount;
     }));
     const keys=Object.keys(map).sort();
     if(!keys.length)return;
@@ -707,7 +707,7 @@ function CostDonutChart({contracts}){
   useEffect(()=>{
     if(!ref.current||typeof Chart==="undefined")return;
     const byType={};
-    contracts.forEach(c=>c.items.filter(i=>!isIncome(i.type)&&!isPayment(i.type)).forEach(i=>{byType[i.type]=(byType[i.type]||0)+i.amount;}));
+    contracts.forEach(c=>c.items.filter(i=>["Expense","Salary","Materials","Transport","Other"].includes(i.type)).forEach(i=>{byType[i.type]=(byType[i.type]||0)+i.amount;}));
     const labels=Object.keys(byType);const data=Object.values(byType);
     if(!labels.length)return;
     if(chartRef.current)chartRef.current.destroy();
@@ -760,8 +760,8 @@ function HomePage({contracts,totalPortfolio,totalNet,ro,openC,openModal}){
     {/* Cards */}
     <div className="cards-grid" style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(272px,1fr))",gap:14}}>
       {contracts.map((c,i)=>{
-        const cR=c.items.filter(x=>isIncome(x.type)).reduce((s,x)=>s+x.amount,0);
-        const cE=c.items.filter(x=>!isIncome(x.type)&&!isPayment(x.type)).reduce((s,x)=>s+x.amount,0);
+        const cR=c.items.filter(x=>["Revenue","Cash"].includes(x.type)).reduce((s,x)=>s+x.amount,0);
+        const cE=c.items.filter(x=>["Expense","Salary","Materials","Transport","Other"].includes(x.type)).reduce((s,x)=>s+x.amount,0);
         const cN=c.value+cR-cE;
         const spent=c.value>0?Math.min(100,(cE/c.value)*100):0;
         return <div key={c.id} className="icard" onClick={()=>openC(c.id)}
@@ -828,12 +828,12 @@ function DashboardPage({contracts,totalPortfolio,totalNet,auditLog,setAuditLog,r
     localStorage.setItem("cap_audit_v1",JSON.stringify(filtered));
     auditWrite(filtered); // sync globally
   }
-  const totalRev=contracts.reduce((s,c)=>s+c.items.filter(i=>isIncome(i.type)).reduce((a,i)=>a+i.amount,0),0);
-  const totalCosts=contracts.reduce((s,c)=>s+c.items.filter(i=>!isIncome(i.type)&&!isPayment(i.type)).reduce((a,i)=>a+i.amount,0),0);
+  const totalRev=contracts.reduce((s,c)=>s+c.items.filter(i=>["Revenue","Cash"].includes(i.type)).reduce((a,i)=>a+i.amount,0),0);
+  const totalCosts=contracts.reduce((s,c)=>s+c.items.filter(i=>["Expense","Salary","Materials","Transport","Other"].includes(i.type)).reduce((a,i)=>a+i.amount,0),0);
   const overallMargin=totalPortfolio>0?((totalNet/totalPortfolio)*100).toFixed(1):"0";
-  const costByType=TYPES.filter(t=>!isIncome(t)&&!isPayment(t)).map(t=>({type:t,amount:contracts.reduce((s,c)=>s+c.items.filter(i=>i.type===t).reduce((a,i)=>a+i.amount,0),0)})).filter(x=>x.amount>0).sort((a,b)=>b.amount-a.amount);
+  const costByType=["Expense","Salary","Materials","Transport","Other"].map(t=>({type:t,amount:contracts.reduce((s,c)=>s+c.items.filter(i=>i.type===t).reduce((a,i)=>a+i.amount,0),0)})).filter(x=>x.amount>0).sort((a,b)=>b.amount-a.amount);
   const maxCost=Math.max(...costByType.map(x=>x.amount),1);
-  function cNet(c){const r=c.items.filter(i=>isIncome(i.type)).reduce((s,i)=>s+i.amount,0);const e=c.items.filter(i=>!isIncome(i.type)&&!isPayment(i.type)).reduce((s,i)=>s+i.amount,0);return c.value+r-e;}
+  function cNet(c){const r=c.items.filter(i=>["Revenue","Cash"].includes(i.type)).reduce((s,i)=>s+i.amount,0);const e=c.items.filter(i=>["Expense","Salary","Materials","Transport","Other"].includes(i.type)).reduce((s,i)=>s+i.amount,0);return c.value+r-e;}
   const sortedC=[...contracts].sort((a,b)=>b.value-a.value);
   const profitable=contracts.filter(c=>cNet(c)>=0).length;
   const healthPct=contracts.length>0?Math.round((profitable/contracts.length)*100):100;
@@ -914,7 +914,7 @@ function DashboardPage({contracts,totalPortfolio,totalNet,auditLog,setAuditLog,r
             :<div style={{display:"flex",flexDirection:"column",gap:20}}>
               {sortedC.map(c=>{
                 const n=cNet(c);
-                const costs=c.items.filter(i=>!isIncome(i.type)&&!isPayment(i.type)).reduce((s,i)=>s+i.amount,0);
+                const costs=c.items.filter(i=>["Expense","Salary","Materials","Transport","Other"].includes(i.type)).reduce((s,i)=>s+i.amount,0);
                 const pct=c.value>0?Math.min(100,(costs/c.value)*100):0;
                 const barColor=pct>80?"linear-gradient(90deg,#f59e0b,#f87171)":pct>50?"linear-gradient(90deg,#d97706,#fbbf24)":"linear-gradient(90deg,#92400e,#f59e0b)";
                 return(
@@ -1092,8 +1092,8 @@ function DetailPage({active,rev,exp,sal,mat,oth,paid,totalCost,net,margin,ro,fil
   },[filteredItems,datePreset,dateFrom,dateTo]);
 
   // Stats for filtered period
-  const fRev=dateItems.filter(i=>isIncome(i.type)).reduce((s,i)=>s+i.amount,0);
-  const fCost=dateItems.filter(i=>!isIncome(i.type)&&!isPayment(i.type)).reduce((s,i)=>s+i.amount,0);
+  const fRev=dateItems.filter(i=>["Revenue","Cash"].includes(i.type)).reduce((s,i)=>s+i.amount,0);
+  const fCost=dateItems.filter(i=>["Expense","Salary","Materials","Transport","Other"].includes(i.type)).reduce((s,i)=>s+i.amount,0);
   const fNet=(datePreset==="all"&&!dateFrom&&!dateTo)?net:active.value+fRev-fCost;
   const isFiltered=datePreset!=="all"||dateFrom||dateTo;
 
@@ -1231,8 +1231,8 @@ function DetailPage({active,rev,exp,sal,mat,oth,paid,totalCost,net,margin,ro,fil
           </div>
           :<div>
             {monthGroups.map(([mk,{label,items:mItems}])=>{
-              const mInc=mItems.filter(i=>isIncome(i.type)).reduce((s,i)=>s+i.amount,0);
-              const mExp=mItems.filter(i=>!isIncome(i.type)&&!isPayment(i.type)).reduce((s,i)=>s+i.amount,0);
+              const mInc=mItems.filter(i=>["Revenue","Cash"].includes(i.type)).reduce((s,i)=>s+i.amount,0);
+              const mExp=mItems.filter(i=>["Expense","Salary","Materials","Transport","Other"].includes(i.type)).reduce((s,i)=>s+i.amount,0);
               const mNet=mInc-mExp;
               const open=!collapsed[mk];
               return <div key={mk} style={{marginBottom:4}}>
@@ -1519,9 +1519,9 @@ function AppMain({user,onLogout}){
     const W=doc.internal.pageSize.getWidth();
     const fmtN=n=>"AED "+Number(n||0).toLocaleString("en",{minimumFractionDigits:2,maximumFractionDigits:2});
     const fmtD=d=>{try{return new Date(d+"T00:00:00").toLocaleDateString("en-AE",{day:"numeric",month:"short",year:"numeric"});}catch{return d||"—";}};
-    const cRev=c.items.filter(i=>isIncome(i.type)).reduce((s,i)=>s+i.amount,0);
-    const cCost=c.items.filter(i=>!isIncome(i.type)&&!isPayment(i.type)).reduce((s,i)=>s+i.amount,0);
-    const cPaid=c.items.filter(i=>isPayment(i.type)).reduce((s,i)=>s+i.amount,0);
+    const cRev=c.items.filter(i=>["Revenue","Cash"].includes(i.type)).reduce((s,i)=>s+i.amount,0);
+    const cCost=c.items.filter(i=>["Expense","Salary","Materials","Transport","Other"].includes(i.type)).reduce((s,i)=>s+i.amount,0);
+    const cPaid=c.items.filter(i=>i.type==="Payment").reduce((s,i)=>s+i.amount,0);
     const cNet=c.value+cRev-cCost;
     const cMargin=c.value>0?((cNet/c.value)*100).toFixed(1):"0";
 
@@ -1593,9 +1593,9 @@ function AppMain({user,onLogout}){
     const fmtD=d=>{try{return new Date(d+"T00:00:00").toLocaleDateString("en-AE",{day:"numeric",month:"short",year:"numeric"});}catch{return d||"—";}};
     contracts.forEach((c,idx)=>{
       if(idx>0)doc.addPage();
-      const cRev=c.items.filter(i=>isIncome(i.type)).reduce((s,i)=>s+i.amount,0);
-      const cCost=c.items.filter(i=>!isIncome(i.type)&&!isPayment(i.type)).reduce((s,i)=>s+i.amount,0);
-      const cPaid=c.items.filter(i=>isPayment(i.type)).reduce((s,i)=>s+i.amount,0);
+      const cRev=c.items.filter(i=>["Revenue","Cash"].includes(i.type)).reduce((s,i)=>s+i.amount,0);
+      const cCost=c.items.filter(i=>["Expense","Salary","Materials","Transport","Other"].includes(i.type)).reduce((s,i)=>s+i.amount,0);
+      const cPaid=c.items.filter(i=>i.type==="Payment").reduce((s,i)=>s+i.amount,0);
       const cNet=c.value+cRev-cCost;
       const cMargin=c.value>0?((cNet/c.value)*100).toFixed(1):"0";
       // Header bar
@@ -1688,11 +1688,11 @@ function AppMain({user,onLogout}){
 
   async function genAI(){
     if(!active)return;setAiLoad(true);setAiText("");
-    const aRev=active.items.filter(i=>isIncome(i.type)).reduce((s,i)=>s+i.amount,0);
-    const aCosts=active.items.filter(i=>!isIncome(i.type)&&!isPayment(i.type)).reduce((s,i)=>s+i.amount,0);
-    const aPaid=active.items.filter(i=>isPayment(i.type)).reduce((s,i)=>s+i.amount,0);
+    const aRev=active.items.filter(i=>["Revenue","Cash"].includes(i.type)).reduce((s,i)=>s+i.amount,0);
+    const aCosts=active.items.filter(i=>["Expense","Salary","Materials","Transport","Other"].includes(i.type)).reduce((s,i)=>s+i.amount,0);
+    const aPaid=active.items.filter(i=>i.type==="Payment").reduce((s,i)=>s+i.amount,0);
     const aNet=active.value+aRev-aCosts;
-    const breakdown=TYPES.filter(t=>!isIncome(t)&&!isPayment(t)).map(t=>{const sum=active.items.filter(i=>i.type===t).reduce((s,i)=>s+i.amount,0);return sum>0?`${t}: AED ${sum.toFixed(2)}`:""}).filter(Boolean).join(", ");
+    const breakdown=["Expense","Salary","Materials","Transport","Other"].map(t=>{const sum=active.items.filter(i=>i.type===t).reduce((s,i)=>s+i.amount,0);return sum>0?`${t}: AED ${sum.toFixed(2)}`:""}).filter(Boolean).join(", ");
     try{
       const res=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",
         headers:{"Content-Type":"application/json","x-api-key":"","anthropic-version":"2023-06-01"},
@@ -1705,19 +1705,19 @@ function AppMain({user,onLogout}){
   }
 
   // ── COMPUTED ──
-  const rev=active?.items.filter(i=>isIncome(i.type)).reduce((s,i)=>s+i.amount,0)||0;
+  const rev=active?.items.filter(i=>["Revenue","Cash"].includes(i.type)).reduce((s,i)=>s+i.amount,0)||0;
   const exp=active?.items.filter(i=>i.type==="Expense").reduce((s,i)=>s+i.amount,0)||0;
   const sal=active?.items.filter(i=>i.type==="Salary").reduce((s,i)=>s+i.amount,0)||0;
   const mat=active?.items.filter(i=>i.type==="Materials").reduce((s,i)=>s+i.amount,0)||0;
-  const oth=active?.items.filter(i=>!isIncome(i.type)&&!isPayment(i.type)&&!["Expense","Salary","Materials"].includes(i.type)).reduce((s,i)=>s+i.amount,0)||0;
-  const paid=active?.items.filter(i=>isPayment(i.type)).reduce((s,i)=>s+i.amount,0)||0;
+  const oth=active?.items.filter(i=>["Transport","Other"].includes(i.type)).reduce((s,i)=>s+i.amount,0)||0;
+  const paid=active?.items.filter(i=>i.type==="Payment").reduce((s,i)=>s+i.amount,0)||0;
   const totalCost=exp+sal+mat+oth;
   const net=(active?.value||0)+rev-totalCost;
   const margin=active?.value>0?((net/active.value)*100).toFixed(1):"0";
   const totalPortfolio=contracts.reduce((s,c)=>s+c.value,0);
   const totalNet=contracts.reduce((acc,c)=>{
-    const r=c.items.filter(i=>isIncome(i.type)).reduce((s,i)=>s+i.amount,0);
-    const e=c.items.filter(i=>!isIncome(i.type)&&!isPayment(i.type)).reduce((s,i)=>s+i.amount,0);
+    const r=c.items.filter(i=>["Revenue","Cash"].includes(i.type)).reduce((s,i)=>s+i.amount,0);
+    const e=c.items.filter(i=>["Expense","Salary","Materials","Transport","Other"].includes(i.type)).reduce((s,i)=>s+i.amount,0);
     return acc+c.value+r-e;
   },0);
 
