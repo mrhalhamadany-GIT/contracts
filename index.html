@@ -1148,7 +1148,6 @@ function DetailPage({active,rev,exp,sal,mat,oth,paid,totalCost,net,margin,ro,fil
     <div className="stats-row" style={{display:"flex",gap:10,marginBottom:12,flexWrap:"nowrap",overflowX:"auto",paddingBottom:2}}>
       <Stat label="Contract Value" value={active.value} color="#fbbf24" icon="◇"/>
       <Stat label="Revenue +" value={rev} color="#34d399" icon="↑"/>
-      {paid>0&&<Stat label="Payments ⊕" value={paid} color="#818cf8" icon="⊕"/>}
       <Stat label="Expenses −" value={exp} color="#f87171" icon="↓"/>
       <Stat label="Salaries −" value={sal} color="#fbbf24" icon="◎"/>
       <Stat label="Net Balance" value={net} color={net>=0?"#34d399":"#f87171"} sub={`${margin}% margin`} icon="◈"/>
