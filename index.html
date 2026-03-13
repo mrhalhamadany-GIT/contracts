@@ -665,8 +665,28 @@ function ItemModal({modal,activeName,form,setForm,errors,onSave,onClose,ro,activ
   </div>;
 }
 
-function PaymentModal({modal,activeName,form,setForm,errors,onSave,onClose}){
+function PaymentModal({modal,activeName,form,setForm,errors,onSave,onClose,activeContractId}){
   const isEdit=modal==="edit-payment";
+  const [uploading,setUploading]=useState(false);
+  async function handleFile(e){
+    const file=e.target.files[0];if(!file)return;
+    if(file.size>50*1024*1024){alert("File too large. Maximum 50MB.");return;}
+    const payId=form.id||uid();
+    if(!form.id)setForm(f=>({...f,_preId:payId}));
+    setUploading(true);
+    try{
+      const path=activeContractId+"/pay-"+payId+"/"+file.name.replace(/\s+/g,"_");
+      const res=await fetch(SB_URL+"/storage/v1/object/entry-docs/"+path,{
+        method:"POST",
+        headers:{"Authorization":"Bearer "+SB_SERVICE,"x-upsert":"true"},
+        body:file
+      });
+      if(!res.ok){const d=await res.json().catch(()=>({}));throw new Error(d.error||res.status);}
+      const url=SB_URL+"/storage/v1/object/public/entry-docs/"+path;
+      setForm(f=>({...f,_preId:payId,paymentFile:{name:file.name,url,size:file.size}}));
+    }catch(err){alert("Upload failed: "+err.message);}
+    setUploading(false);e.target.value="";
+  }
   return <div className="modal-card" style={{maxWidth:460,maxHeight:"92vh"}}>
     <div className="modal-top"/>
     <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
@@ -694,10 +714,40 @@ function PaymentModal({modal,activeName,form,setForm,errors,onSave,onClose}){
           value={form.date||today()} onChange={e=>setForm(f=>({...f,date:e.target.value}))}/>
       </div>
     </div>
-    <div style={{marginBottom:22}}>
+    <div style={{marginBottom:14}}>
       <label className="lbl">Description <span className="req">*</span></label>
       <input className={"inp"+(errors.desc?" error":"")} value={form.desc||""}
         onChange={e=>setForm(f=>({...f,desc:e.target.value}))} placeholder="e.g. Client payment – Invoice #3"/>
+    </div>
+    <div style={{marginBottom:22}}>
+      <label className="lbl">Invoice / Receipt <span style={{fontSize:9,color:"#818cf8",fontWeight:700,letterSpacing:"0.05em"}}>PDF · OPTIONAL</span></label>
+      {form.paymentFile
+        ?<div style={{display:"flex",alignItems:"center",gap:10,background:"rgba(129,140,248,0.07)",border:"1px solid rgba(129,140,248,0.22)",borderRadius:12,padding:"10px 14px"}}>
+          <span style={{fontSize:16}}>📎</span>
+          <div style={{flex:1,minWidth:0}}>
+            <div style={{fontSize:12,fontWeight:600,color:"var(--t1)",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{form.paymentFile.name}</div>
+            <div style={{fontSize:10,color:"var(--t4)",marginTop:1}}>{(form.paymentFile.size/1024).toFixed(0)} KB</div>
+          </div>
+          <button onClick={()=>setForm(f=>({...f,paymentFile:null}))}
+            style={{background:"none",border:"none",color:"var(--t4)",cursor:"pointer",fontSize:16,padding:"4px 7px",borderRadius:6,transition:"color 0.15s",lineHeight:1}}
+            onMouseEnter={e=>e.currentTarget.style.color="#f87171"} onMouseLeave={e=>e.currentTarget.style.color="var(--t4)"}>✕</button>
+        </div>
+        :uploading
+          ?<div style={{display:"flex",alignItems:"center",gap:10,background:"rgba(129,140,248,0.07)",border:"1px solid rgba(129,140,248,0.2)",borderRadius:12,padding:"14px"}}>
+            <span style={{width:16,height:16,border:"2px solid rgba(129,140,248,0.2)",borderTop:"2px solid #818cf8",borderRadius:"50%",animation:"spin 0.6s linear infinite",flexShrink:0}}/>
+            <div style={{fontSize:12,fontWeight:600,color:"#818cf8"}}>Uploading to cloud...</div>
+          </div>
+          :<label style={{display:"flex",alignItems:"center",gap:12,background:"rgba(255,255,255,0.03)",border:"1.5px dashed rgba(129,140,248,0.25)",borderRadius:12,padding:"14px",cursor:"pointer",transition:"all 0.2s"}}
+            onMouseEnter={e=>{e.currentTarget.style.borderColor="rgba(129,140,248,0.5)";e.currentTarget.style.background="rgba(129,140,248,0.05)"}}
+            onMouseLeave={e=>{e.currentTarget.style.borderColor="rgba(129,140,248,0.25)";e.currentTarget.style.background="rgba(255,255,255,0.03)"}}>
+            <span style={{fontSize:22,opacity:0.5}}>📎</span>
+            <div>
+              <div style={{fontSize:12,fontWeight:600,color:"var(--t2)"}}>Attach Invoice / Receipt PDF</div>
+              <div style={{fontSize:10,color:"var(--t4)",marginTop:2}}>Uploads to cloud · Any device · Max 50MB</div>
+            </div>
+            <input type="file" accept=".pdf,application/pdf" style={{display:"none"}} onChange={handleFile}/>
+          </label>
+      }
     </div>
     <div style={{display:"flex",gap:10}}>
       <RippleBtn className="btn-p" onClick={onSave} style={{flex:1,padding:"13px"}}>
@@ -1361,7 +1411,10 @@ function DetailPage({active,rev,exp,sal,mat,oth,totalCost,net,margin,ro,filtered
                 {(active.payments||[]).slice().sort((a,b)=>new Date(b.date||0)-new Date(a.date||0)).map((pay,i)=>(
                   <tr key={pay.id} className="trow" style={{animation:`slideRight 0.18s ease ${Math.min(i*0.025,0.15)}s both`}}>
                     <td style={{fontSize:11,color:"var(--t3)",whiteSpace:"nowrap"}}>{fmtDate(pay.date)}</td>
-                    <td><div style={{fontSize:13,color:"var(--t1)",fontWeight:500}}>{pay.desc}</div></td>
+                    <td>
+                      <div style={{fontSize:13,color:"var(--t1)",fontWeight:500}}>{pay.desc}</div>
+                      {pay.paymentFile&&<a href={pay.paymentFile.url} target="_blank" rel="noopener noreferrer" style={{fontSize:10,color:"#818cf8",display:"inline-flex",alignItems:"center",gap:3,marginTop:3,textDecoration:"none",fontWeight:600}}>📎 View Invoice</a>}
+                    </td>
                     <td style={{fontSize:13,fontWeight:700,whiteSpace:"nowrap",fontVariantNumeric:"tabular-nums",color:"#818cf8"}}>+{fmt(pay.amount)}</td>
                     <td style={{width:72}}>{!ro&&<div className="row-actions" style={{display:"flex",gap:4,justifyContent:"flex-end"}}>
                       <button className="btn-icon" title="Edit" onClick={()=>openPayModal("edit-payment",{...pay})} style={{color:"var(--t4)",fontSize:13}} onMouseEnter={e=>e.currentTarget.style.color="var(--a3)"} onMouseLeave={e=>e.currentTarget.style.color="var(--t4)"}>✎</button>
@@ -1620,7 +1673,7 @@ function AppMain({user,onLogout}){
   }
   function savePayment(){
     if(!validate(["amount","date","desc"]))return;
-    const payData={desc:form.desc.trim(),amount:Math.abs(parseFloat(form.amount)),date:form.date};
+    const payData={desc:form.desc.trim(),amount:Math.abs(parseFloat(form.amount)),date:form.date,...(form.paymentFile?{paymentFile:form.paymentFile}:{paymentFile:null})};
     let upd;
     const existingPay=active?.payments?.find(p=>p.id===form.id);
     if(form.id&&existingPay){
@@ -1884,7 +1937,7 @@ function AppMain({user,onLogout}){
       {isItemModal&&
         <ItemModal modal={modal} activeName={active?.name} form={form} setForm={setForm} errors={errors} onSave={saveItem} onClose={closeModal} ro={ro} activeContractId={activeId}/>}
       {isPayModal&&
-        <PaymentModal modal={modal} activeName={active?.name} form={form} setForm={setForm} errors={errors} onSave={savePayment} onClose={closeModal}/>}
+        <PaymentModal modal={modal} activeName={active?.name} form={form} setForm={setForm} errors={errors} onSave={savePayment} onClose={closeModal} activeContractId={activeId}/>}
       {modal==="delete-confirm"&&
         <DeleteModal name={active?.name} itemCount={active?.items?.length||0} onDelete={()=>delContract(active.id)} onClose={closeModal}/>}
     </div>}
