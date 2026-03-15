@@ -1747,13 +1747,14 @@ function AppMain({user,onLogout}){
       margin:{left:14,right:14}
     });
 
-    // Entries table
+    // Entries table (Payment-typed items excluded)
+    const entryItems=c.items.filter(i=>i.type!=="Payment").slice().sort((a,b)=>new Date(b.date||0)-new Date(a.date||0));
     const startY=doc.lastAutoTable.finalY+8;
     doc.setFont("helvetica","bold");doc.setFontSize(9);doc.setTextColor(138,114,96);
-    doc.text("ENTRIES ("+c.items.length+")",14,startY);
+    doc.text("ENTRIES ("+entryItems.length+")",14,startY);
     doc.autoTable({startY:startY+4,theme:"striped",
       head:[["Date","Type","Description","Amount","Note"]],
-      body:c.items.slice().sort((a,b)=>new Date(b.date||0)-new Date(a.date||0)).map(i=>[
+      body:entryItems.map(i=>[
         fmtD(i.date),i.type,i.desc,
         (isIncome(i.type)?"+":"−")+fmtN(i.amount),
         i.note||"—"
@@ -1765,6 +1766,26 @@ function AppMain({user,onLogout}){
       didParseCell:data=>{if(data.section==="body"&&data.column.index===3){const v=data.cell.raw||"";data.cell.styles.textColor=v.startsWith("+")?[22,163,74]:[220,38,38];}},
       margin:{left:14,right:14}
     });
+
+    // Payments Received table
+    const payments=(c.payments||[]).slice().sort((a,b)=>new Date(b.date||0)-new Date(a.date||0));
+    const payStartY=doc.lastAutoTable.finalY+10;
+    doc.setFont("helvetica","bold");doc.setFontSize(9);doc.setTextColor(99,102,241);
+    doc.text("PAYMENTS RECEIVED ("+payments.length+")",14,payStartY);
+    if(payments.length>0){
+      doc.autoTable({startY:payStartY+4,theme:"striped",
+        head:[["Date","Description","Amount","Invoice"]],
+        body:payments.map(p=>[fmtD(p.date),p.desc,"+"+fmtN(p.amount),p.paymentFile?p.paymentFile.name:"—"]),
+        headStyles:{fillColor:[55,48,163],textColor:[255,255,255],fontStyle:"bold",fontSize:8},
+        bodyStyles:{fontSize:8,textColor:[50,30,15]},
+        alternateRowStyles:{fillColor:[238,240,255]},
+        columnStyles:{2:{halign:"right",textColor:[99,102,241]},3:{textColor:[138,114,96],fontSize:7}},
+        margin:{left:14,right:14}
+      });
+    } else {
+      doc.setFont("helvetica","normal");doc.setFontSize(8);doc.setTextColor(138,114,96);
+      doc.text("No payments recorded.",14,payStartY+8);
+    }
 
     // Footer
     const fY=doc.internal.pageSize.getHeight()-12;
